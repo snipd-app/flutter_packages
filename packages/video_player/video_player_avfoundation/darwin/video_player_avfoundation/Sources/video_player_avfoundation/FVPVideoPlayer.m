@@ -20,29 +20,34 @@ static void *rateContext = &rateContext;
 @implementation FVPVideoPlayer
 - (instancetype)initWithAsset:(NSString *)asset
                     avFactory:(id<FVPAVFactory>)avFactory
-                    registrar:(NSObject<FlutterPluginRegistrar> *)registrar {
+                    registrar:(NSObject<FlutterPluginRegistrar> *)registrar
+                    playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs{
   return [self initWithURL:[NSURL fileURLWithPath:[FVPVideoPlayer absolutePathForAssetName:asset]]
                httpHeaders:@{}
-                 avFactory:avFactory
-                 registrar:registrar];
+               avFactory:avFactory
+               registrar:registrar
+                playbackEndTimeMs: playbackEndTimeMs
+  ];
 }
 
 - (instancetype)initWithURL:(NSURL *)url
-                httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers
+                  httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers
                   avFactory:(id<FVPAVFactory>)avFactory
-                  registrar:(NSObject<FlutterPluginRegistrar> *)registrar {
+                  registrar:(NSObject<FlutterPluginRegistrar> *)registrar
+                  playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs {
   NSDictionary<NSString *, id> *options = nil;
   if ([headers count] != 0) {
     options = @{@"AVURLAssetHTTPHeaderFieldsKey" : headers};
   }
   AVURLAsset *urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
   AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
-  return [self initWithPlayerItem:item avFactory:avFactory registrar:registrar];
+  return [self initWithPlayerItem:item avFactory:avFactory registrar:registrar playbackEndTimeMs:playbackEndTimeMs];
 }
 
 - (instancetype)initWithPlayerItem:(AVPlayerItem *)item
                          avFactory:(id<FVPAVFactory>)avFactory
-                         registrar:(NSObject<FlutterPluginRegistrar> *)registrar {
+                         registrar:(NSObject<FlutterPluginRegistrar> *)registrar
+                         playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs {
   self = [super init];
   NSAssert(self, @"super init cannot be nil");
 
@@ -83,6 +88,21 @@ static void *rateContext = &rateContext;
 
   _player = [avFactory playerWithPlayerItem:item];
   _player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
+  NSLog(@"[PLAYER] Check if playbackEndTimeMs is not null %f",
+         [playbackEndTimeMs doubleValue]);
+  if (playbackEndTimeMs != nil) {
+    NSLog(@"[PLAYER]  PlaybackEndTimeMs is not null");
+    CMTime endTime = CMTimeMakeWithSeconds([playbackEndTimeMs doubleValue] / 1000,
+                                            NSEC_PER_MSEC);
+    NSLog(@"[PLAYER]  endTime is %f", CMTimeGetSeconds(endTime));
+    [_player.currentItem setForwardPlaybackEndTime:endTime];
+  }
+  
+  // Prevent automatic buffering until play
+
+  _player.automaticallyWaitsToMinimizeStalling = NO;
+  _player.currentItem.preferredForwardBufferDuration = 2;
+  
 
   // Configure output.
   NSDictionary *pixBuffAttributes = @{

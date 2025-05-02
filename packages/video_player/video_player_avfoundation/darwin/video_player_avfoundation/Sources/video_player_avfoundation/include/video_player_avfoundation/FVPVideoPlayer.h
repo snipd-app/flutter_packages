@@ -34,14 +34,16 @@ NS_ASSUME_NONNULL_BEGIN
 /// Initializes a new instance of FVPVideoPlayer with the given asset, AV factory, and registrar.
 - (instancetype)initWithAsset:(NSString *)asset
                     avFactory:(id<FVPAVFactory>)avFactory
-                    registrar:(NSObject<FlutterPluginRegistrar> *)registrar;
+                    registrar:(NSObject<FlutterPluginRegistrar> *)registrar
+                    playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs;
 
 /// Initializes a new instance of FVPVideoPlayer with the given URL, HTTP headers, AV factory, and
 /// registrar.
 - (instancetype)initWithURL:(NSURL *)url
                 httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers
                   avFactory:(id<FVPAVFactory>)avFactory
-                  registrar:(NSObject<FlutterPluginRegistrar> *)registrar;
+                  registrar:(NSObject<FlutterPluginRegistrar> *)registrar
+                  playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs;
 
 /// Disposes the video player and releases any resources it holds.
 - (void)dispose;

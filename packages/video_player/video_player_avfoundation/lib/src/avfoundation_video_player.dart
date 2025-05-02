@@ -40,6 +40,7 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
 
   @override
   Future<int?> create(DataSource dataSource) async {
+    print('[BUG] Creating dataSource');
     return createWithOptions(
       VideoCreationOptions(
         dataSource: dataSource,
@@ -83,6 +84,7 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
       httpHeaders: httpHeaders,
       formatHint: formatHint,
       viewType: _platformVideoViewTypeFromVideoViewType(viewType),
+      playbackEndTimeMs: dataSource.playbackEndTime?.inMilliseconds,
     );
 
     final int playerId = await _api.create(pigeonCreationOptions);

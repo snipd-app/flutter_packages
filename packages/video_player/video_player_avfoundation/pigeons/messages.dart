@@ -45,6 +45,7 @@ class CreationOptions {
   String? formatHint;
   Map<String, String> httpHeaders;
   PlatformVideoViewType viewType;
+  int? playbackEndTimeMs;
 }
 
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')

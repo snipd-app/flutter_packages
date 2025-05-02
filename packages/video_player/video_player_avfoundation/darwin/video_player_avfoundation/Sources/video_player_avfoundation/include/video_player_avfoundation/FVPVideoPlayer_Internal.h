@@ -35,7 +35,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// link, AV factory, and registrar.
 - (instancetype)initWithPlayerItem:(AVPlayerItem *)item
                          avFactory:(id<FVPAVFactory>)avFactory
-                         registrar:(NSObject<FlutterPluginRegistrar> *)registrar;
+                         registrar:(NSObject<FlutterPluginRegistrar> *)registrar
+                         playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs;;
 
 /// Updates the playing state of the video player.
 - (void)updatePlayingState;

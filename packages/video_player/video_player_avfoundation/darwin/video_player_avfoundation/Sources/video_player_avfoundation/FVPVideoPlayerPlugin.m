@@ -56,10 +56,10 @@
 #if TARGET_OS_IOS
   // Platform views are only supported on iOS as of now.
   FVPNativeVideoViewFactory *factory = [[FVPNativeVideoViewFactory alloc]
-               initWithMessenger:registrar.messenger
-      playerByIdentifierProvider:^FVPVideoPlayer *(NSNumber *playerIdentifier) {
-        return instance->_playersByIdentifier[playerIdentifier];
-      }];
+                                        initWithMessenger:registrar.messenger
+                                        playerByIdentifierProvider:^FVPVideoPlayer *(NSNumber *playerIdentifier) {
+    return instance->_playersByIdentifier[playerIdentifier];
+  }];
   [registrar registerViewFactory:factory withId:@"plugins.flutter.dev/video_player_ios"];
 #endif
   SetUpFVPAVFoundationVideoPlayerApi(registrar.messenger, instance);
@@ -90,17 +90,17 @@
 
 - (void)detachFromEngineForRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
   [self.playersByIdentifier.allValues
-      makeObjectsPerformSelector:@selector(disposeSansEventChannel)];
+   makeObjectsPerformSelector:@selector(disposeSansEventChannel)];
   [self.playersByIdentifier removeAllObjects];
   SetUpFVPAVFoundationVideoPlayerApi(registrar.messenger, nil);
 }
 
 - (int64_t)onPlayerSetup:(FVPVideoPlayer *)player {
   FVPTextureBasedVideoPlayer *textureBasedPlayer =
-      [player isKindOfClass:[FVPTextureBasedVideoPlayer class]]
-          ? (FVPTextureBasedVideoPlayer *)player
-          : nil;
-
+  [player isKindOfClass:[FVPTextureBasedVideoPlayer class]]
+  ? (FVPTextureBasedVideoPlayer *)player
+  : nil;
+  
   int64_t playerIdentifier;
   if (textureBasedPlayer) {
     playerIdentifier = [self.registry registerTexture:(FVPTextureBasedVideoPlayer *)player];
@@ -108,19 +108,19 @@
   } else {
     playerIdentifier = self.nextNonTexturePlayerIdentifier--;
   }
-
+  
   FlutterEventChannel *eventChannel = [FlutterEventChannel
-      eventChannelWithName:[NSString stringWithFormat:@"flutter.io/videoPlayer/videoEvents%lld",
-                                                      playerIdentifier]
-           binaryMessenger:_messenger];
+                                       eventChannelWithName:[NSString stringWithFormat:@"flutter.io/videoPlayer/videoEvents%lld",
+                                                             playerIdentifier]
+                                       binaryMessenger:_messenger];
   [eventChannel setStreamHandler:player];
   player.eventChannel = eventChannel;
   self.playersByIdentifier[@(playerIdentifier)] = player;
-
+  
   // Ensure that the first frame is drawn once available, even if the video isn't played, since
   // the engine is now expecting the texture to be populated.
   [textureBasedPlayer expectFrame];
-
+  
   return playerIdentifier;
 }
 
@@ -137,11 +137,11 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
                                         AVAudioSessionCategoryOptions options,
                                         AVAudioSessionCategoryOptions clearOptions) {
   NSSet *playCategories = [NSSet
-      setWithObjects:AVAudioSessionCategoryPlayback, AVAudioSessionCategoryPlayAndRecord, nil];
+                           setWithObjects:AVAudioSessionCategoryPlayback, AVAudioSessionCategoryPlayAndRecord, nil];
   NSSet *recordCategories =
-      [NSSet setWithObjects:AVAudioSessionCategoryRecord, AVAudioSessionCategoryPlayAndRecord, nil];
+  [NSSet setWithObjects:AVAudioSessionCategoryRecord, AVAudioSessionCategoryPlayAndRecord, nil];
   NSSet *requiredCategories =
-      [NSSet setWithObjects:requestedCategory, AVAudioSession.sharedInstance.category, nil];
+  [NSSet setWithObjects:requestedCategory, AVAudioSession.sharedInstance.category, nil];
   BOOL requiresPlay = [requiredCategories intersectsSet:playCategories];
   BOOL requiresRecord = [requiredCategories intersectsSet:recordCategories];
   if (requiresPlay && requiresRecord) {
@@ -165,7 +165,7 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
   // Allow audio playback when the Ring/Silent switch is set to silent
   upgradeAudioSessionCategory(AVAudioSessionCategoryPlayback, 0, 0);
 #endif
-
+  
   [self.playersByIdentifier.allValues makeObjectsPerformSelector:@selector(dispose)];
   [self.playersByIdentifier removeAllObjects];
 }
@@ -173,16 +173,16 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
 - (nullable NSNumber *)createWithOptions:(nonnull FVPCreationOptions *)options
                                    error:(FlutterError **)error {
   BOOL textureBased = options.viewType == FVPPlatformVideoViewTypeTextureView;
-
+  
   @try {
     FVPVideoPlayer *player = textureBased ? [self texturePlayerWithOptions:options]
-                                          : [self platformViewPlayerWithOptions:options];
-
+    : [self platformViewPlayerWithOptions:options];
+    
     if (player == nil) {
       *error = [FlutterError errorWithCode:@"video_player" message:@"not implemented" details:nil];
       return nil;
     }
-
+    
     return @([self onPlayerSetup:player]);
   } @catch (NSException *exception) {
     *error = [FlutterError errorWithCode:@"video_player" message:exception.reason details:nil];
@@ -191,19 +191,19 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
 }
 
 - (nullable FVPTextureBasedVideoPlayer *)texturePlayerWithOptions:
-    (nonnull FVPCreationOptions *)options {
+(nonnull FVPCreationOptions *)options {
   FVPFrameUpdater *frameUpdater = [[FVPFrameUpdater alloc] initWithRegistry:_registry];
   FVPDisplayLink *displayLink =
-      [self.displayLinkFactory displayLinkWithRegistrar:_registrar
-                                               callback:^() {
-                                                 [frameUpdater displayLinkFired];
-                                               }];
-
+  [self.displayLinkFactory displayLinkWithRegistrar:_registrar
+                                           callback:^() {
+    [frameUpdater displayLinkFired];
+  }];
+  
   __weak typeof(self) weakSelf = self;
   void (^onDisposed)(int64_t) = ^(int64_t textureIdentifier) {
     [weakSelf.registry unregisterTexture:textureIdentifier];
   };
-
+  
   if (options.asset) {
     NSString *assetPath = [self assetPathFromCreationOptions:options];
     return [[FVPTextureBasedVideoPlayer alloc] initWithAsset:assetPath
@@ -211,6 +211,7 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
                                                  displayLink:displayLink
                                                    avFactory:_avFactory
                                                    registrar:self.registrar
+                                           playbackEndTimeMs: options.playbackEndTimeMs
                                                   onDisposed:onDisposed];
   } else if (options.uri) {
     return [[FVPTextureBasedVideoPlayer alloc] initWithURL:[NSURL URLWithString:options.uri]
@@ -219,9 +220,10 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
                                                httpHeaders:options.httpHeaders
                                                  avFactory:_avFactory
                                                  registrar:self.registrar
+                                         playbackEndTimeMs: options.playbackEndTimeMs
                                                 onDisposed:onDisposed];
   }
-
+  
   return nil;
 }
 
@@ -231,14 +233,18 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
     NSString *assetPath = [self assetPathFromCreationOptions:options];
     return [[FVPVideoPlayer alloc] initWithAsset:assetPath
                                        avFactory:_avFactory
-                                       registrar:self.registrar];
+                                       registrar:self.registrar
+                               playbackEndTimeMs: options.playbackEndTimeMs];
   } else if (options.uri) {
     return [[FVPVideoPlayer alloc] initWithURL:[NSURL URLWithString:options.uri]
                                    httpHeaders:options.httpHeaders
                                      avFactory:_avFactory
-                                     registrar:self.registrar];
+                                     registrar:self.registrar
+            
+                             playbackEndTimeMs: options.playbackEndTimeMs]
+    ;
   }
-
+  
   return nil;
 }
 
@@ -295,11 +301,11 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
     completion:(nonnull void (^)(FlutterError *_Nullable))completion {
   FVPVideoPlayer *player = self.playersByIdentifier[@(playerIdentifier)];
   [player seekTo:position
-      completionHandler:^(BOOL finished) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-          completion(nil);
-        });
-      }];
+completionHandler:^(BOOL finished) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      completion(nil);
+    });
+  }];
 }
 
 - (void)pausePlayer:(NSInteger)playerIdentifier error:(FlutterError **)error {

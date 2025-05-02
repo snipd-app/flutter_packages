@@ -21,11 +21,11 @@ public abstract class VideoAsset {
    * @return the asset.
    */
   @NonNull
-  static VideoAsset fromAssetUrl(@NonNull String assetUrl) {
+  static VideoAsset fromAssetUrl(@NonNull String assetUrl, @Nullable int playbackEndTimeMs) {
     if (!assetUrl.startsWith("asset:///")) {
       throw new IllegalArgumentException("assetUrl must start with 'asset:///'");
     }
-    return new LocalVideoAsset(assetUrl);
+    return new LocalVideoAsset(assetUrl, playbackEndTimeMs);
   }
 
   /**
@@ -40,8 +40,9 @@ public abstract class VideoAsset {
   static VideoAsset fromRemoteUrl(
       @Nullable String remoteUrl,
       @NonNull StreamingFormat streamingFormat,
-      @NonNull Map<String, String> httpHeaders) {
-    return new HttpVideoAsset(remoteUrl, streamingFormat, new HashMap<>(httpHeaders));
+      @NonNull Map<String, String> httpHeaders,
+      @Nullable int playbackEndTimeMs) {
+    return new HttpVideoAsset(remoteUrl, streamingFormat, new HashMap<>(httpHeaders), playbackEndTimeMs);
   }
 
   /**
@@ -51,17 +52,19 @@ public abstract class VideoAsset {
    * @return the asset.
    */
   @NonNull
-  static VideoAsset fromRtspUrl(@NonNull String rtspUrl) {
+  static VideoAsset fromRtspUrl(@NonNull String rtspUrl, @Nullable int playbackEndTimeMs) {
     if (!rtspUrl.startsWith("rtsp://")) {
       throw new IllegalArgumentException("rtspUrl must start with 'rtsp://'");
     }
-    return new RtspVideoAsset(rtspUrl);
+    return new RtspVideoAsset(rtspUrl, playbackEndTimeMs);
   }
 
   @Nullable protected final String assetUrl;
+  @Nullable protected final int playbackEndTimeMs;
 
-  protected VideoAsset(@Nullable String assetUrl) {
+  protected VideoAsset(@Nullable String assetUrl, @Nullable int playbackEndTimeMs) {
     this.assetUrl = assetUrl;
+    this.playbackEndTimeMs = playbackEndTimeMs;
   }
 
   /**

@@ -37,15 +37,17 @@
 - (instancetype)initWithAsset:(NSString *)asset
                  frameUpdater:(FVPFrameUpdater *)frameUpdater
                   displayLink:(FVPDisplayLink *)displayLink
-                    avFactory:(id<FVPAVFactory>)avFactory
-                    registrar:(NSObject<FlutterPluginRegistrar> *)registrar
+                  avFactory:(id<FVPAVFactory>)avFactory
+                  registrar:(NSObject<FlutterPluginRegistrar> *)registrar
+                  playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs
                    onDisposed:(void (^)(int64_t))onDisposed {
   return [self initWithURL:[NSURL fileURLWithPath:[FVPVideoPlayer absolutePathForAssetName:asset]]
-              frameUpdater:frameUpdater
-               displayLink:displayLink
-               httpHeaders:@{}
-                 avFactory:avFactory
-                 registrar:registrar
+                frameUpdater:frameUpdater
+                displayLink:displayLink
+                httpHeaders:@{}
+                avFactory:avFactory
+                registrar:registrar
+                playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs
                 onDisposed:onDisposed];
 }
 
@@ -55,6 +57,7 @@
                 httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers
                   avFactory:(id<FVPAVFactory>)avFactory
                   registrar:(NSObject<FlutterPluginRegistrar> *)registrar
+                  playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs
                  onDisposed:(void (^)(int64_t))onDisposed {
   NSDictionary<NSString *, id> *options = nil;
   if ([headers count] != 0) {
@@ -67,6 +70,7 @@
                       displayLink:displayLink
                         avFactory:avFactory
                         registrar:registrar
+                playbackEndTimeMs: playbackEndTimeMs
                        onDisposed:onDisposed];
 }
 
@@ -75,8 +79,10 @@
                        displayLink:(FVPDisplayLink *)displayLink
                          avFactory:(id<FVPAVFactory>)avFactory
                          registrar:(NSObject<FlutterPluginRegistrar> *)registrar
+                        
+                        playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs
                         onDisposed:(void (^)(int64_t))onDisposed {
-  self = [super initWithPlayerItem:item avFactory:avFactory registrar:registrar];
+  self = [super initWithPlayerItem:item avFactory:avFactory registrar:registrar playbackEndTimeMs: playbackEndTimeMs];
 
   if (self) {
     _frameUpdater = frameUpdater;
