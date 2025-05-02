@@ -16,11 +16,13 @@ import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import io.flutter.plugins.videoplayer.ExoPlayerEventListener;
 import io.flutter.plugins.videoplayer.ExoPlayerState;
+import io.flutter.plugins.videoplayer.Messages;
 import io.flutter.plugins.videoplayer.VideoAsset;
 import io.flutter.plugins.videoplayer.VideoPlayer;
 import io.flutter.plugins.videoplayer.VideoPlayerCallbacks;
 import io.flutter.plugins.videoplayer.VideoPlayerOptions;
 import io.flutter.view.TextureRegistry;
+import io.flutter.plugins.videoplayer.Messages.PlattformVideoPlaybackOptions;
 
 /**
  * A subclass of {@link VideoPlayer} that adds functionality related to texture view as a way of
@@ -50,7 +52,8 @@ public final class TextureVideoPlayer extends VideoPlayer
       @NonNull VideoPlayerCallbacks events,
       @NonNull TextureRegistry.SurfaceProducer surfaceProducer,
       @NonNull VideoAsset asset,
-      @NonNull VideoPlayerOptions options) {
+      @NonNull VideoPlayerOptions options,
+      @NonNull PlattformVideoPlaybackOptions playbackOptions) {
     return new TextureVideoPlayer(
         events,
         surfaceProducer,
@@ -62,7 +65,7 @@ public final class TextureVideoPlayer extends VideoPlayer
                       .setLoadControl(loadControl)
                   .setMediaSourceFactory(asset.getMediaSourceFactory(context));
           return builder.build();
-        });
+        }, playbackOptions);
   }
 
   @VisibleForTesting
@@ -71,8 +74,9 @@ public final class TextureVideoPlayer extends VideoPlayer
       @NonNull TextureRegistry.SurfaceProducer surfaceProducer,
       @NonNull MediaItem mediaItem,
       @NonNull VideoPlayerOptions options,
-      @NonNull ExoPlayerProvider exoPlayerProvider) {
-    super(events, mediaItem, options, exoPlayerProvider);
+      @NonNull ExoPlayerProvider exoPlayerProvider,
+      @NonNull PlattformVideoPlaybackOptions playbackOptions) {
+    super(events, mediaItem, options, exoPlayerProvider, playbackOptions);
 
     this.surfaceProducer = surfaceProducer;
     surfaceProducer.setCallback(this);

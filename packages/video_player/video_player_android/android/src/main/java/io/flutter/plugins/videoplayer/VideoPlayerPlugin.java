@@ -128,7 +128,8 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
               flutterState.applicationContext,
               VideoPlayerEventCallbacks.bindTo(createEventChannel(id)),
               videoAsset,
-              options);
+              options,
+              arg.getPlaybackOptions());
     } else {
       TextureRegistry.SurfaceProducer handle = flutterState.textureRegistry.createSurfaceProducer();
       id = handle.id();
@@ -138,7 +139,8 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
               VideoPlayerEventCallbacks.bindTo(createEventChannel(id)),
               handle,
               videoAsset,
-              options);
+              options,
+              arg.getPlaybackOptions());
     }
 
     videoPlayers.put(id, videoPlayer);
