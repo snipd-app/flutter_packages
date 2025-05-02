@@ -7,12 +7,19 @@ package io.flutter.plugins.videoplayer;
 import static androidx.media3.common.Player.REPEAT_MODE_ALL;
 import static androidx.media3.common.Player.REPEAT_MODE_OFF;
 
+import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackParameters;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.LoadControl;
+import io.flutter.plugins.videoplayer.Messages.PlattformVideoPlaybackOptions;
 
 /**
  * A class responsible for managing video playback using {@link ExoPlayer}.
@@ -25,6 +32,7 @@ public abstract class VideoPlayer {
   @NonNull private final VideoPlayerOptions options;
   @NonNull protected final VideoPlayerCallbacks videoPlayerEvents;
   @NonNull protected ExoPlayer exoPlayer;
+  @NonNull private final PlattformVideoPlaybackOptions playbackOptions;
 
   /** A closure-compatible signature since {@link java.util.function.Supplier} is API level 24. */
   public interface ExoPlayerProvider {
@@ -33,25 +41,33 @@ public abstract class VideoPlayer {
      *
      * @return new instance.
      */
-    @NonNull
-    ExoPlayer get();
+    @OptIn(markerClass = UnstableApi.class) @NonNull
+    ExoPlayer get(LoadControl loadControl);
   }
 
   public VideoPlayer(
       @NonNull VideoPlayerCallbacks events,
       @NonNull MediaItem mediaItem,
       @NonNull VideoPlayerOptions options,
-      @NonNull ExoPlayerProvider exoPlayerProvider) {
+      @NonNull ExoPlayerProvider exoPlayerProvider,
+      @NonNull PlattformVideoPlaybackOptions playbackOptions) {
     this.videoPlayerEvents = events;
     this.mediaItem = mediaItem;
     this.options = options;
     this.exoPlayerProvider = exoPlayerProvider;
     this.exoPlayer = createVideoPlayer();
+    this.playbackOptions = playbackOptions;
   }
 
   @NonNull
   protected ExoPlayer createVideoPlayer() {
-    ExoPlayer exoPlayer = exoPlayerProvider.get();
+    int bufferDuration  = playbackOptions.getMaxBufferDurationSeconds().intValue() * 1000;
+
+    @SuppressLint("UnsafeOptInUsageError")
+    ExoPlayer exoPlayer = exoPlayerProvider.get(new DefaultLoadControl.Builder()
+                    .setPrioritizeTimeOverSizeThresholds(true)
+                    .setBufferDurationsMs(bufferDuration, bufferDuration, 2000, 2000)
+            .build());
     exoPlayer.setMediaItem(mediaItem);
     exoPlayer.prepare();
 
@@ -98,6 +114,10 @@ public abstract class VideoPlayer {
     final PlaybackParameters playbackParameters = new PlaybackParameters(((float) value));
 
     exoPlayer.setPlaybackParameters(playbackParameters);
+  }
+
+  void setMaxBufferDuration(long bufferDurationSeconds) {
+//    exoPlayer.setPlaybackParameters(playbackParameters);
   }
 
   void seekTo(int location) {

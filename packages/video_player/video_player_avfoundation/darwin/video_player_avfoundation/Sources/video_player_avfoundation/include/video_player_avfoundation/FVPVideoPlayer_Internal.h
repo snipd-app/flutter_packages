@@ -6,6 +6,8 @@
 #import "FVPAVFactory.h"
 #import "FVPVideoPlayer.h"
 
+#import "messages.g.h"
+
 #if TARGET_OS_OSX
 #import <FlutterMacOS/FlutterMacOS.h>
 #else
@@ -36,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithPlayerItem:(AVPlayerItem *)item
                          avFactory:(id<FVPAVFactory>)avFactory
                          registrar:(NSObject<FlutterPluginRegistrar> *)registrar
-                         playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs;;
+                   playbackOptions:  (FVPPlattformVideoPlaybackOptions *) playbackOptions;
 
 /// Updates the playing state of the video player.
 - (void)updatePlayingState;

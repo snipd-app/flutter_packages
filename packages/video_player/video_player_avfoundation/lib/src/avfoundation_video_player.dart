@@ -84,7 +84,11 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
       httpHeaders: httpHeaders,
       formatHint: formatHint,
       viewType: _platformVideoViewTypeFromVideoViewType(viewType),
-      playbackEndTimeMs: dataSource.playbackEndTime?.inMilliseconds,
+      playbackOptions: PlattformVideoPlaybackOptions(
+          maxBufferDurationSeconds:
+              options.dataSource.playbackOptions.maxBufferDuration.inSeconds,
+          playbackEndTimeMs: options
+              .dataSource.playbackOptions.playbackEndTime?.inMilliseconds),
     );
 
     final int playerId = await _api.create(pigeonCreationOptions);
@@ -123,6 +127,15 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
     assert(speed > 0);
 
     return _api.setPlaybackSpeed(speed, playerId);
+  }
+
+  @override
+  Future<void> setMaxBufferDuration(int playerId, Duration maxBufferDuration) {
+    assert(maxBufferDuration.inSeconds > 0);
+    return _api.setMaxBufferDuration(
+      maxBufferDuration.inSeconds,
+      playerId,
+    );
   }
 
   @override

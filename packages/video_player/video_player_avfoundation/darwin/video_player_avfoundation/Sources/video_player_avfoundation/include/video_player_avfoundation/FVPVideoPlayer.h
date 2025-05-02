@@ -5,6 +5,7 @@
 #import <AVFoundation/AVFoundation.h>
 
 #import "FVPAVFactory.h"
+#import "messages.g.h"
 
 #if TARGET_OS_OSX
 #import <FlutterMacOS/FlutterMacOS.h>
@@ -35,7 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithAsset:(NSString *)asset
                     avFactory:(id<FVPAVFactory>)avFactory
                     registrar:(NSObject<FlutterPluginRegistrar> *)registrar
-                    playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs;
+                    playbackOptions:  (FVPPlattformVideoPlaybackOptions *) playbackOptions;
 
 /// Initializes a new instance of FVPVideoPlayer with the given URL, HTTP headers, AV factory, and
 /// registrar.
@@ -43,7 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
                 httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers
                   avFactory:(id<FVPAVFactory>)avFactory
                   registrar:(NSObject<FlutterPluginRegistrar> *)registrar
-                  playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs;
+            playbackOptions:  (FVPPlattformVideoPlaybackOptions *) playbackOptions;
 
 /// Disposes the video player and releases any resources it holds.
 - (void)dispose;
@@ -58,6 +59,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// Sets the playback speed of the video player.
 - (void)setPlaybackSpeed:(double)speed;
+
+/// Sets the playback speed of the video player.
+- (void)setMaxBufferDuration:(NSInteger) bufferDurationSeconds;
 
 /// Starts playing the video.
 - (void)play;

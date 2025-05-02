@@ -33,10 +33,21 @@ class PlatformVideoViewCreationParams {
   final int playerId;
 }
 
+class PlattformVideoPlaybackOptions {
+  const PlattformVideoPlaybackOptions({
+    required this.playbackEndTimeMs,
+    required this.maxBufferDurationSeconds,
+  });
+
+  final int? playbackEndTimeMs;
+  final int maxBufferDurationSeconds;
+}
+
 class CreationOptions {
   CreationOptions({
     required this.httpHeaders,
     required this.viewType,
+    required this.playbackOptions
   });
 
   String? asset;
@@ -45,7 +56,7 @@ class CreationOptions {
   String? formatHint;
   Map<String, String> httpHeaders;
   PlatformVideoViewType viewType;
-  int? playbackEndTimeMs;
+  PlattformVideoPlaybackOptions playbackOptions;
 }
 
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
@@ -63,6 +74,8 @@ abstract class AVFoundationVideoPlayerApi {
   void setVolume(double volume, int playerId);
   @ObjCSelector('setPlaybackSpeed:forPlayer:')
   void setPlaybackSpeed(double speed, int playerId);
+  @ObjCSelector('setMaxBufferDuration:forPlayer:')
+  void setMaxBufferDuration(int bufferDurationSeconds, int playerId);
   @ObjCSelector('playPlayer:')
   void play(int playerId);
   @ObjCSelector('positionForPlayer:')

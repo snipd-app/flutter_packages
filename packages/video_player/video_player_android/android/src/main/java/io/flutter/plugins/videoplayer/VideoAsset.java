@@ -11,6 +11,7 @@ import androidx.media3.common.MediaItem;
 import androidx.media3.exoplayer.source.MediaSource;
 import java.util.HashMap;
 import java.util.Map;
+import io.flutter.plugins.videoplayer.Messages.PlattformVideoPlaybackOptions;
 
 /** A video to be played by {@link VideoPlayer}. */
 public abstract class VideoAsset {
@@ -21,11 +22,12 @@ public abstract class VideoAsset {
    * @return the asset.
    */
   @NonNull
-  static VideoAsset fromAssetUrl(@NonNull String assetUrl, @Nullable int playbackEndTimeMs) {
+  static VideoAsset fromAssetUrl(@NonNull String assetUrl,
+                                 @NonNull PlattformVideoPlaybackOptions playbackOptions) {
     if (!assetUrl.startsWith("asset:///")) {
       throw new IllegalArgumentException("assetUrl must start with 'asset:///'");
     }
-    return new LocalVideoAsset(assetUrl, playbackEndTimeMs);
+    return new LocalVideoAsset(assetUrl, playbackOptions);
   }
 
   /**
@@ -41,8 +43,8 @@ public abstract class VideoAsset {
       @Nullable String remoteUrl,
       @NonNull StreamingFormat streamingFormat,
       @NonNull Map<String, String> httpHeaders,
-      @Nullable int playbackEndTimeMs) {
-    return new HttpVideoAsset(remoteUrl, streamingFormat, new HashMap<>(httpHeaders), playbackEndTimeMs);
+      @NonNull PlattformVideoPlaybackOptions playbackOptions) {
+    return new HttpVideoAsset(remoteUrl, streamingFormat, new HashMap<>(httpHeaders), playbackOptions);
   }
 
   /**
@@ -52,19 +54,20 @@ public abstract class VideoAsset {
    * @return the asset.
    */
   @NonNull
-  static VideoAsset fromRtspUrl(@NonNull String rtspUrl, @Nullable int playbackEndTimeMs) {
+  static VideoAsset fromRtspUrl(@NonNull String rtspUrl,
+                                @NonNull PlattformVideoPlaybackOptions playbackOptions) {
     if (!rtspUrl.startsWith("rtsp://")) {
       throw new IllegalArgumentException("rtspUrl must start with 'rtsp://'");
     }
-    return new RtspVideoAsset(rtspUrl, playbackEndTimeMs);
+    return new RtspVideoAsset(rtspUrl, playbackOptions);
   }
 
   @Nullable protected final String assetUrl;
-  @Nullable protected final int playbackEndTimeMs;
+  protected final PlattformVideoPlaybackOptions playbackOptions;
 
-  protected VideoAsset(@Nullable String assetUrl, @Nullable int playbackEndTimeMs) {
+  protected VideoAsset(@Nullable String assetUrl, @NonNull PlattformVideoPlaybackOptions playbackOptions) {
     this.assetUrl = assetUrl;
-    this.playbackEndTimeMs = playbackEndTimeMs;
+    this.playbackOptions = playbackOptions;
   }
 
   /**
@@ -84,6 +87,19 @@ public abstract class VideoAsset {
   @NonNull
   public abstract MediaSource.Factory getMediaSourceFactory(@NonNull Context context);
 
+  public MediaItem.Builder getItemBuilder() {
+    MediaItem.Builder builder = new MediaItem.Builder();
+
+    if (playbackOptions.getPlaybackEndTimeMs() != null) {
+      builder.setClippingConfiguration(
+              new MediaItem.ClippingConfiguration.Builder()
+                      .setStartPositionMs(0)
+                      .setEndPositionMs((playbackOptions.getPlaybackEndTimeMs()))
+                              .build()
+      );
+    }
+    return builder;
+  }
   /** Streaming formats that can be provided to the video player as a hint. */
   enum StreamingFormat {
     /** Default, if the format is either not known or not another valid format. */

@@ -17,6 +17,7 @@ export 'package:video_player_platform_interface/video_player_platform_interface.
         DataSourceType,
         DurationRange,
         VideoFormat,
+        VideoPlaybackOptions,
         VideoPlayerOptions,
         VideoPlayerWebOptions,
         VideoPlayerWebOptionsControls;
@@ -274,7 +275,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     this.package,
     Future<ClosedCaptionFile>? closedCaptionFile,
     this.videoPlayerOptions,
-    this.playbackEndTime,
+    this.videoPlaybackOptions = const VideoPlaybackOptions(),
   })  : _closedCaptionFileFuture = closedCaptionFile,
         dataSourceType = DataSourceType.asset,
         formatHint = null,
@@ -296,8 +297,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     this.formatHint,
     Future<ClosedCaptionFile>? closedCaptionFile,
     this.videoPlayerOptions,
+    this.videoPlaybackOptions = const VideoPlaybackOptions(),
     this.httpHeaders = const <String, String>{},
-    this.playbackEndTime,
   })  : _closedCaptionFileFuture = closedCaptionFile,
         dataSourceType = DataSourceType.network,
         package = null,
@@ -317,8 +318,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     this.formatHint,
     Future<ClosedCaptionFile>? closedCaptionFile,
     this.videoPlayerOptions,
+    this.videoPlaybackOptions = const VideoPlaybackOptions(),
     this.httpHeaders = const <String, String>{},
-    this.playbackEndTime,
   })  : _closedCaptionFileFuture = closedCaptionFile,
         dataSource = url.toString(),
         dataSourceType = DataSourceType.network,
@@ -333,8 +334,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     File file, {
     Future<ClosedCaptionFile>? closedCaptionFile,
     this.videoPlayerOptions,
+    this.videoPlaybackOptions = const VideoPlaybackOptions(),
     this.httpHeaders = const <String, String>{},
-    this.playbackEndTime,
   })  : _closedCaptionFileFuture = closedCaptionFile,
         dataSource = Uri.file(file.absolute.path).toString(),
         dataSourceType = DataSourceType.file,
@@ -350,7 +351,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     Uri contentUri, {
     Future<ClosedCaptionFile>? closedCaptionFile,
     this.videoPlayerOptions,
-    this.playbackEndTime,
+    this.videoPlaybackOptions = const VideoPlaybackOptions(),
   })  : assert(defaultTargetPlatform == TargetPlatform.android,
             'VideoPlayerController.contentUri is only supported on Android.'),
         _closedCaptionFileFuture = closedCaptionFile,
@@ -381,10 +382,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// Provide additional configuration options (optional). Like setting the audio mode to mix
   final VideoPlayerOptions? videoPlayerOptions;
 
+  /// Provide additional configuration options (optional). Like setting the audio mode to mix
+  final VideoPlaybackOptions videoPlaybackOptions;
+
   /// Only set for [asset] videos. The package that the asset was loaded from.
   final String? package;
-
-  final Duration? playbackEndTime;
 
   Future<ClosedCaptionFile>? _closedCaptionFileFuture;
   ClosedCaptionFile? _closedCaptionFile;
@@ -421,7 +423,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           sourceType: DataSourceType.asset,
           asset: dataSource,
           package: package,
-          playbackEndTime: playbackEndTime,
+          playbackOptions: videoPlaybackOptions,
         );
       case DataSourceType.network:
         dataSourceDescription = DataSource(
@@ -429,20 +431,20 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           uri: dataSource,
           formatHint: formatHint,
           httpHeaders: httpHeaders,
-          playbackEndTime: playbackEndTime,
+          playbackOptions: videoPlaybackOptions,
         );
       case DataSourceType.file:
         dataSourceDescription = DataSource(
           sourceType: DataSourceType.file,
           uri: dataSource,
           httpHeaders: httpHeaders,
-          playbackEndTime: playbackEndTime,
+          playbackOptions: videoPlaybackOptions,
         );
       case DataSourceType.contentUri:
         dataSourceDescription = DataSource(
           sourceType: DataSourceType.contentUri,
           uri: dataSource,
-          playbackEndTime: playbackEndTime,
+          playbackOptions: videoPlaybackOptions,
         );
     }
 
@@ -716,6 +718,17 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
     value = value.copyWith(playbackSpeed: speed);
     await _applyPlaybackSpeed();
+  }
+
+  /// Sets the maximum buffer duration for the video.
+  Future<void> setMaxBufferDuration(Duration duration) async {
+    if (duration < Duration.zero) {
+      throw ArgumentError.value(
+        duration,
+        'Buffer duration must be greater or equal to zero.',
+      );
+    }
+    await _videoPlayerPlatform.setMaxBufferDuration(textureId, duration);
   }
 
   /// Sets the caption offset.

@@ -56,6 +56,32 @@ class PlatformVideoViewCreationParams {
   }
 }
 
+class PlattformVideoPlaybackOptions {
+  PlattformVideoPlaybackOptions({
+    this.playbackEndTimeMs,
+    required this.maxBufferDurationSeconds,
+  });
+
+  int? playbackEndTimeMs;
+
+  int maxBufferDurationSeconds;
+
+  Object encode() {
+    return <Object?>[
+      playbackEndTimeMs,
+      maxBufferDurationSeconds,
+    ];
+  }
+
+  static PlattformVideoPlaybackOptions decode(Object result) {
+    result as List<Object?>;
+    return PlattformVideoPlaybackOptions(
+      playbackEndTimeMs: result[0] as int?,
+      maxBufferDurationSeconds: result[1]! as int,
+    );
+  }
+}
+
 class CreationOptions {
   CreationOptions({
     this.asset,
@@ -64,7 +90,7 @@ class CreationOptions {
     this.formatHint,
     required this.httpHeaders,
     required this.viewType,
-    this.playbackEndTimeMs,
+    required this.playbackOptions,
   });
 
   String? asset;
@@ -79,7 +105,7 @@ class CreationOptions {
 
   PlatformVideoViewType viewType;
 
-  int? playbackEndTimeMs;
+  PlattformVideoPlaybackOptions playbackOptions;
 
   Object encode() {
     return <Object?>[
@@ -89,7 +115,7 @@ class CreationOptions {
       formatHint,
       httpHeaders,
       viewType,
-      playbackEndTimeMs,
+      playbackOptions,
     ];
   }
 
@@ -102,7 +128,7 @@ class CreationOptions {
       formatHint: result[3] as String?,
       httpHeaders: (result[4] as Map<Object?, Object?>?)!.cast<String, String>(),
       viewType: result[5]! as PlatformVideoViewType,
-      playbackEndTimeMs: result[6] as int?,
+      playbackOptions: result[6]! as PlattformVideoPlaybackOptions,
     );
   }
 }
@@ -121,8 +147,11 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is PlatformVideoViewCreationParams) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
-    }    else if (value is CreationOptions) {
+    }    else if (value is PlattformVideoPlaybackOptions) {
       buffer.putUint8(131);
+      writeValue(buffer, value.encode());
+    }    else if (value is CreationOptions) {
+      buffer.putUint8(132);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -138,6 +167,8 @@ class _PigeonCodec extends StandardMessageCodec {
       case 130: 
         return PlatformVideoViewCreationParams.decode(readValue(buffer)!);
       case 131: 
+        return PlattformVideoPlaybackOptions.decode(readValue(buffer)!);
+      case 132: 
         return CreationOptions.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -282,6 +313,28 @@ class AVFoundationVideoPlayerApi {
     );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[speed, playerId]) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
+  Future<void> setMaxBufferDuration(int bufferDurationSeconds, int playerId) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setMaxBufferDuration$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(<Object?>[bufferDurationSeconds, playerId]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
       throw _createConnectionError(pigeonVar_channelName);
     } else if (pigeonVar_replyList.length > 1) {

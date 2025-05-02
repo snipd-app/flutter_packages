@@ -4,6 +4,7 @@
 
 package io.flutter.plugins.videoplayer.platformview;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
@@ -48,9 +49,11 @@ public class PlatformViewVideoPlayer extends VideoPlayer {
         events,
         asset.getMediaItem(),
         options,
-        () -> {
-          ExoPlayer.Builder builder =
+        (loadControl) -> {
+            @SuppressLint("UnsafeOptInUsageError")
+            ExoPlayer.Builder builder =
               new ExoPlayer.Builder(context)
+                      .setLoadControl(loadControl)
                   .setMediaSourceFactory(asset.getMediaSourceFactory(context));
           return builder.build();
         });

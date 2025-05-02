@@ -26,6 +26,7 @@ typedef NS_ENUM(NSUInteger, FVPPlatformVideoViewType) {
 @end
 
 @class FVPPlatformVideoViewCreationParams;
+@class FVPPlattformVideoPlaybackOptions;
 @class FVPCreationOptions;
 
 /// Information passed to the platform view creation.
@@ -34,6 +35,15 @@ typedef NS_ENUM(NSUInteger, FVPPlatformVideoViewType) {
 - (instancetype)init NS_UNAVAILABLE;
 + (instancetype)makeWithPlayerId:(NSInteger )playerId;
 @property(nonatomic, assign) NSInteger  playerId;
+@end
+
+@interface FVPPlattformVideoPlaybackOptions : NSObject
+/// `init` unavailable to enforce nonnull fields, see the `make` class method.
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)makeWithPlaybackEndTimeMs:(nullable NSNumber *)playbackEndTimeMs
+    maxBufferDurationSeconds:(NSInteger )maxBufferDurationSeconds;
+@property(nonatomic, strong, nullable) NSNumber * playbackEndTimeMs;
+@property(nonatomic, assign) NSInteger  maxBufferDurationSeconds;
 @end
 
 @interface FVPCreationOptions : NSObject
@@ -45,14 +55,14 @@ typedef NS_ENUM(NSUInteger, FVPPlatformVideoViewType) {
     formatHint:(nullable NSString *)formatHint
     httpHeaders:(NSDictionary<NSString *, NSString *> *)httpHeaders
     viewType:(FVPPlatformVideoViewType)viewType
-    playbackEndTimeMs:(nullable NSNumber *)playbackEndTimeMs;
+    playbackOptions:(FVPPlattformVideoPlaybackOptions *)playbackOptions;
 @property(nonatomic, copy, nullable) NSString * asset;
 @property(nonatomic, copy, nullable) NSString * uri;
 @property(nonatomic, copy, nullable) NSString * packageName;
 @property(nonatomic, copy, nullable) NSString * formatHint;
 @property(nonatomic, copy) NSDictionary<NSString *, NSString *> * httpHeaders;
 @property(nonatomic, assign) FVPPlatformVideoViewType viewType;
-@property(nonatomic, strong, nullable) NSNumber * playbackEndTimeMs;
+@property(nonatomic, strong) FVPPlattformVideoPlaybackOptions * playbackOptions;
 @end
 
 /// The codec used by all APIs.
@@ -66,6 +76,7 @@ NSObject<FlutterMessageCodec> *FVPGetMessagesCodec(void);
 - (void)setLooping:(BOOL)isLooping forPlayer:(NSInteger)playerId error:(FlutterError *_Nullable *_Nonnull)error;
 - (void)setVolume:(double)volume forPlayer:(NSInteger)playerId error:(FlutterError *_Nullable *_Nonnull)error;
 - (void)setPlaybackSpeed:(double)speed forPlayer:(NSInteger)playerId error:(FlutterError *_Nullable *_Nonnull)error;
+- (void)setMaxBufferDuration:(NSInteger)bufferDurationSeconds forPlayer:(NSInteger)playerId error:(FlutterError *_Nullable *_Nonnull)error;
 - (void)playPlayer:(NSInteger)playerId error:(FlutterError *_Nullable *_Nonnull)error;
 /// @return `nil` only when `error != nil`.
 - (nullable NSNumber *)positionForPlayer:(NSInteger)playerId error:(FlutterError *_Nullable *_Nonnull)error;

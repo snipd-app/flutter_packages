@@ -9,16 +9,17 @@ import androidx.annotation.NonNull;
 import androidx.media3.common.MediaItem;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.exoplayer.source.MediaSource;
+import io.flutter.plugins.videoplayer.Messages.PlattformVideoPlaybackOptions;;
 
 final class LocalVideoAsset extends VideoAsset {
-  LocalVideoAsset(@NonNull String assetUrl) {
-    super(assetUrl);
+  LocalVideoAsset(@NonNull String assetUrl, @NonNull PlattformVideoPlaybackOptions playbackOptions) {
+    super(assetUrl, playbackOptions);
   }
 
   @NonNull
   @Override
   public MediaItem getMediaItem() {
-    return new MediaItem.Builder().setUri(assetUrl).build();
+    return getItemBuilder().setUri(assetUrl).build();
   }
 
   @NonNull

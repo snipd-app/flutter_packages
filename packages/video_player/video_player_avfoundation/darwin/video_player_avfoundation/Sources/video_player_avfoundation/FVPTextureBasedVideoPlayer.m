@@ -35,29 +35,29 @@
 
 @implementation FVPTextureBasedVideoPlayer
 - (instancetype)initWithAsset:(NSString *)asset
-                 frameUpdater:(FVPFrameUpdater *)frameUpdater
+                  frameUpdater:(FVPFrameUpdater *)frameUpdater
                   displayLink:(FVPDisplayLink *)displayLink
                   avFactory:(id<FVPAVFactory>)avFactory
                   registrar:(NSObject<FlutterPluginRegistrar> *)registrar
-                  playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs
-                   onDisposed:(void (^)(int64_t))onDisposed {
-  return [self initWithURL:[NSURL fileURLWithPath:[FVPVideoPlayer absolutePathForAssetName:asset]]
+                  playbackOptions:  (FVPPlattformVideoPlaybackOptions *) playbackOptions
+                  onDisposed:(void (^)(int64_t))onDisposed {
+  return [self  initWithURL:[NSURL fileURLWithPath:[FVPVideoPlayer absolutePathForAssetName:asset]]
                 frameUpdater:frameUpdater
                 displayLink:displayLink
                 httpHeaders:@{}
                 avFactory:avFactory
                 registrar:registrar
-                playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs
+                playbackOptions:  playbackOptions
                 onDisposed:onDisposed];
 }
 
-- (instancetype)initWithURL:(NSURL *)url
-               frameUpdater:(FVPFrameUpdater *)frameUpdater
-                displayLink:(FVPDisplayLink *)displayLink
-                httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers
-                  avFactory:(id<FVPAVFactory>)avFactory
-                  registrar:(NSObject<FlutterPluginRegistrar> *)registrar
-                  playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs
+- (instancetype) initWithURL:(NSURL *)url
+                 frameUpdater:(FVPFrameUpdater *)frameUpdater
+                 displayLink:(FVPDisplayLink *)displayLink
+                 httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers
+                 avFactory:(id<FVPAVFactory>)avFactory
+                 registrar:(NSObject<FlutterPluginRegistrar> *)registrar
+                 playbackOptions:  (FVPPlattformVideoPlaybackOptions *) playbackOptions
                  onDisposed:(void (^)(int64_t))onDisposed {
   NSDictionary<NSString *, id> *options = nil;
   if ([headers count] != 0) {
@@ -70,7 +70,7 @@
                       displayLink:displayLink
                         avFactory:avFactory
                         registrar:registrar
-                playbackEndTimeMs: playbackEndTimeMs
+                  playbackOptions: playbackOptions
                        onDisposed:onDisposed];
 }
 
@@ -79,18 +79,18 @@
                        displayLink:(FVPDisplayLink *)displayLink
                          avFactory:(id<FVPAVFactory>)avFactory
                          registrar:(NSObject<FlutterPluginRegistrar> *)registrar
-                        
-                        playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs
-                        onDisposed:(void (^)(int64_t))onDisposed {
-  self = [super initWithPlayerItem:item avFactory:avFactory registrar:registrar playbackEndTimeMs: playbackEndTimeMs];
 
+                   playbackOptions:  (FVPPlattformVideoPlaybackOptions *) playbackOptions
+                        onDisposed:(void (^)(int64_t))onDisposed {
+  self = [super initWithPlayerItem:item avFactory:avFactory registrar:registrar playbackOptions: playbackOptions];
+  
   if (self) {
     _frameUpdater = frameUpdater;
     _displayLink = displayLink;
     _frameUpdater.displayLink = _displayLink;
     _selfRefresh = true;
     _onDisposed = [onDisposed copy];
-
+    
     // This is to fix 2 bugs: 1. blank video for encrypted video streams on iOS 16
     // (https://github.com/flutter/flutter/issues/111457) and 2. swapped width and height for some
     // video streams (not just iOS 16).  (https://github.com/flutter/flutter/issues/109116). An
@@ -112,7 +112,7 @@
 
 - (void)expectFrame {
   self.waitingForFrame = YES;
-
+  
   _displayLink.running = YES;
 }
 
@@ -144,21 +144,21 @@
 - (void)seekTo:(int64_t)location completionHandler:(void (^)(BOOL))completionHandler {
   CMTime previousCMTime = self.player.currentTime;
   [super seekTo:location
-      completionHandler:^(BOOL completed) {
-        if (CMTimeCompare(self.player.currentTime, previousCMTime) != 0) {
-          // Ensure that a frame is drawn once available, even if currently paused. In theory a
-          // race is possible here where the new frame has already drawn by the time this code
-          // runs, and the display link stays on indefinitely, but that should be relatively
-          // harmless. This must use the display link rather than just informing the engine that a
-          // new frame is available because the seek completing doesn't guarantee that the pixel
-          // buffer is already available.
-          [self expectFrame];
-        }
-
-        if (completionHandler) {
-          completionHandler(completed);
-        }
-      }];
+completionHandler:^(BOOL completed) {
+    if (CMTimeCompare(self.player.currentTime, previousCMTime) != 0) {
+      // Ensure that a frame is drawn once available, even if currently paused. In theory a
+      // race is possible here where the new frame has already drawn by the time this code
+      // runs, and the display link stays on indefinitely, but that should be relatively
+      // harmless. This must use the display link rather than just informing the engine that a
+      // new frame is available because the seek completing doesn't guarantee that the pixel
+      // buffer is already available.
+      [self expectFrame];
+    }
+    
+    if (completionHandler) {
+      completionHandler(completed);
+    }
+  }];
 }
 
 - (void)disposeSansEventChannel {
@@ -169,17 +169,17 @@
   if (self.disposed) {
     return;
   }
-
+  
   [super disposeSansEventChannel];
-
+  
   [self.playerLayer removeFromSuperlayer];
-
+  
   _displayLink = nil;
 }
 
 - (void)dispose {
   [super dispose];
-
+  
   _onDisposed(self.frameUpdater.textureIdentifier);
 }
 
@@ -189,7 +189,7 @@
   // If the difference between target time and current time is longer than this fraction of frame
   // duration then reset target time.
   const float resetThreshold = 0.5;
-
+  
   // Ensure video sampling at regular intervals. This function is not called at exact time intervals
   // so CACurrentMediaTime returns irregular timestamps which causes missed video frames. The range
   // outside of which targetTime is reset should be narrow enough to make possible lag as small as
@@ -203,7 +203,7 @@
     self.targetTime = currentTime;
   }
   self.targetTime += duration;
-
+  
   CVPixelBufferRef buffer = NULL;
   CMTime outputItemTime = [self.videoOutput itemTimeForHostTime:self.targetTime];
   if ([self.videoOutput hasNewPixelBufferForItemTime:outputItemTime]) {
@@ -214,7 +214,7 @@
       self.latestPixelBuffer = buffer;
     }
   }
-
+  
   if (self.waitingForFrame && buffer) {
     self.waitingForFrame = NO;
     // If the display link was only running temporarily to pick up a new frame while the video was
@@ -223,7 +223,7 @@
       self.displayLink.running = NO;
     }
   }
-
+  
   // Calling textureFrameAvailable only from within displayLinkFired would require a non-trivial
   // solution to minimize missed video frames due to race between displayLinkFired, copyPixelBuffer
   // and place where is _textureFrameAvailable reset to false in the flutter engine.
@@ -238,7 +238,7 @@
     const float durationThreshold = 0.5;
     // If duration changes by this fraction or more then reset average frame duration measurement.
     const float resetFraction = 0.01;
-
+    
     if (fabs(duration - self.latestDuration) >= self.latestDuration * resetFraction) {
       self.startTime = currentTime;
       self.framesCount = 0;
@@ -257,12 +257,12 @@
       self.framesCount = 0;
     }
     self.framesCount++;
-
+    
     dispatch_async(dispatch_get_main_queue(), ^{
       [self.frameUpdater.registry textureFrameAvailable:self.frameUpdater.textureIdentifier];
     });
   }
-
+  
   // Add a retain for the engine, since the copyPixelBufferForItemTime has already been accounted
   // for, and the engine expects an owning reference.
   return CVBufferRetain(self.latestPixelBuffer);

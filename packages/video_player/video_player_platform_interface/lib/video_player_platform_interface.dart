@@ -100,6 +100,11 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
     throw UnimplementedError('getPosition() has not been implemented.');
   }
 
+  /// Set the maximum buffer duration.
+  Future<void> setMaxBufferDuration(int playerId, Duration maxBufferDuration) {
+    throw UnimplementedError('getPosition() has not been implemented.');
+  }
+
   /// Returns a widget displaying the video with a given playerId.
   @Deprecated('Use buildViewWithOptions() instead.')
   Widget buildView(int playerId) {
@@ -121,6 +126,21 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
   Future<void> setWebOptions(int playerId, VideoPlayerWebOptions options) {
     throw UnimplementedError('setWebOptions() has not been implemented.');
   }
+}
+
+//// Options for video playback.
+class VideoPlaybackOptions {
+  /// Constructs an instance of [VideoPlaybackOptions].
+  const VideoPlaybackOptions({
+    this.playbackEndTime,
+    this.maxBufferDuration = Duration.zero,
+  });
+
+  /// The time at which the video should stop playing.
+  final Duration? playbackEndTime;
+
+  /// The maximum duration of the buffer.
+  final Duration maxBufferDuration;
 }
 
 class _PlaceholderImplementation extends VideoPlayerPlatform {}
@@ -148,7 +168,7 @@ class DataSource {
     this.asset,
     this.package,
     this.httpHeaders = const <String, String>{},
-    this.playbackEndTime,
+    this.playbackOptions = const VideoPlaybackOptions(),
   });
 
   /// The way in which the video was originally loaded.
@@ -179,7 +199,8 @@ class DataSource {
   /// [DataSourceType.asset] videos.
   final String? package;
 
-  final Duration? playbackEndTime;
+  /// The playback options for the video.
+  final VideoPlaybackOptions playbackOptions;
 }
 
 /// The way in which the video was originally loaded.
@@ -407,6 +428,8 @@ class VideoPlayerOptions {
     this.mixWithOthers = false,
     this.allowBackgroundPlayback = false,
     this.webOptions,
+    this.playbackEndTime,
+    this.maxBufferDuration = Duration.zero,
   });
 
   /// Set this to true to keep playing video in background, when app goes in background.
@@ -422,6 +445,9 @@ class VideoPlayerOptions {
 
   /// Additional web controls
   final VideoPlayerWebOptions? webOptions;
+
+  final Duration? playbackEndTime;
+  final Duration maxBufferDuration;
 }
 
 /// [VideoPlayerWebOptions] can be optionally used to set additional web settings

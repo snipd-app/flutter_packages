@@ -11,16 +11,17 @@ import androidx.media3.common.MediaItem;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.rtsp.RtspMediaSource;
 import androidx.media3.exoplayer.source.MediaSource;
+import io.flutter.plugins.videoplayer.Messages.PlattformVideoPlaybackOptions;;
 
 final class RtspVideoAsset extends VideoAsset {
-  RtspVideoAsset(@NonNull String assetUrl, @Nullable int playbackEndTimeMs) {
-    super(assetUrl, playbackEndTimeMs);
+  RtspVideoAsset(@NonNull String assetUrl, @NonNull PlattformVideoPlaybackOptions playbackOptions) {
+    super(assetUrl, playbackOptions);
   }
 
   @NonNull
   @Override
   public MediaItem getMediaItem() {
-    return new MediaItem.Builder().setUri(assetUrl).build();
+    return getItemBuilder().setUri(assetUrl).build();
   }
 
   // TODO: Migrate to stable API, see https://github.com/flutter/flutter/issues/147039.

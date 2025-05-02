@@ -27,8 +27,11 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is PlatformVideoViewCreationParams) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
-    }    else if (value is CreationOptions) {
+    }    else if (value is PlattformVideoPlaybackOptions) {
       buffer.putUint8(131);
+      writeValue(buffer, value.encode());
+    }    else if (value is CreationOptions) {
+      buffer.putUint8(132);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -44,6 +47,8 @@ class _PigeonCodec extends StandardMessageCodec {
       case 130: 
         return PlatformVideoViewCreationParams.decode(readValue(buffer)!);
       case 131: 
+        return PlattformVideoPlaybackOptions.decode(readValue(buffer)!);
+      case 132: 
         return CreationOptions.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -66,6 +71,8 @@ abstract class TestHostVideoPlayerApi {
   void setVolume(double volume, int playerId);
 
   void setPlaybackSpeed(double speed, int playerId);
+
+  void setMaxBufferDuration(int bufferDurationSeconds, int playerId);
 
   void play(int playerId);
 
@@ -223,6 +230,34 @@ abstract class TestHostVideoPlayerApi {
               'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setPlaybackSpeed was null, expected non-null int.');
           try {
             api.setPlaybackSpeed(arg_speed!, arg_playerId!);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setMaxBufferDuration$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        _testBinaryMessengerBinding!.defaultBinaryMessenger.setMockDecodedMessageHandler<Object?>(pigeonVar_channel, null);
+      } else {
+        _testBinaryMessengerBinding!.defaultBinaryMessenger.setMockDecodedMessageHandler<Object?>(pigeonVar_channel, (Object? message) async {
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setMaxBufferDuration was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final int? arg_bufferDurationSeconds = (args[0] as int?);
+          assert(arg_bufferDurationSeconds != null,
+              'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setMaxBufferDuration was null, expected non-null int.');
+          final int? arg_playerId = (args[1] as int?);
+          assert(arg_playerId != null,
+              'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setMaxBufferDuration was null, expected non-null int.');
+          try {
+            api.setMaxBufferDuration(arg_bufferDurationSeconds!, arg_playerId!);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

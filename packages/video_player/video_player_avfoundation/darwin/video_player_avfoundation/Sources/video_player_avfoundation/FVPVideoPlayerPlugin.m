@@ -206,21 +206,21 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
   
   if (options.asset) {
     NSString *assetPath = [self assetPathFromCreationOptions:options];
-    return [[FVPTextureBasedVideoPlayer alloc] initWithAsset:assetPath
+    return [[FVPTextureBasedVideoPlayer alloc]  initWithAsset:assetPath
                                                 frameUpdater:frameUpdater
-                                                 displayLink:displayLink
-                                                   avFactory:_avFactory
-                                                   registrar:self.registrar
-                                           playbackEndTimeMs: options.playbackEndTimeMs
-                                                  onDisposed:onDisposed];
+                                                displayLink:displayLink
+                                                avFactory:_avFactory
+                                                registrar:self.registrar
+                                                playbackOptions: options.playbackOptions
+                                                onDisposed:onDisposed];
   } else if (options.uri) {
-    return [[FVPTextureBasedVideoPlayer alloc] initWithURL:[NSURL URLWithString:options.uri]
-                                              frameUpdater:frameUpdater
-                                               displayLink:displayLink
-                                               httpHeaders:options.httpHeaders
-                                                 avFactory:_avFactory
-                                                 registrar:self.registrar
-                                         playbackEndTimeMs: options.playbackEndTimeMs
+    return [[FVPTextureBasedVideoPlayer alloc]  initWithURL:[NSURL URLWithString:options.uri]
+                                                frameUpdater:frameUpdater
+                                                displayLink:displayLink
+                                                httpHeaders:options.httpHeaders
+                                                avFactory:_avFactory
+                                                registrar:self.registrar
+                                                playbackOptions: options.playbackOptions
                                                 onDisposed:onDisposed];
   }
   
@@ -232,16 +232,15 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
   if (options.asset) {
     NSString *assetPath = [self assetPathFromCreationOptions:options];
     return [[FVPVideoPlayer alloc] initWithAsset:assetPath
-                                       avFactory:_avFactory
-                                       registrar:self.registrar
-                               playbackEndTimeMs: options.playbackEndTimeMs];
+                                        avFactory:_avFactory
+                                        registrar:self.registrar
+                                        playbackOptions: options.playbackOptions];
   } else if (options.uri) {
     return [[FVPVideoPlayer alloc] initWithURL:[NSURL URLWithString:options.uri]
-                                   httpHeaders:options.httpHeaders
-                                     avFactory:_avFactory
-                                     registrar:self.registrar
-            
-                             playbackEndTimeMs: options.playbackEndTimeMs]
+                                    httpHeaders:options.httpHeaders
+                                    avFactory:_avFactory
+                                    registrar:self.registrar
+                                    playbackOptions: options.playbackOptions]
     ;
   }
   
@@ -284,6 +283,13 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
                    error:(FlutterError **)error {
   FVPVideoPlayer *player = self.playersByIdentifier[@(playerIdentifier)];
   [player setPlaybackSpeed:speed];
+}
+
+- (void)setMaxBufferDuration:(NSInteger) maxBufferDuration
+               forPlayer:(NSInteger)playerIdentifier
+                   error:(FlutterError **)error {
+  FVPVideoPlayer *player = self.playersByIdentifier[@(playerIdentifier)];
+  [player setMaxBufferDuration:maxBufferDuration];
 }
 
 - (void)playPlayer:(NSInteger)playerIdentifier error:(FlutterError **)error {

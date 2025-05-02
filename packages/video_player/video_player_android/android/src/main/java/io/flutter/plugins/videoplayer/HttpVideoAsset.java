@@ -18,6 +18,7 @@ import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.exoplayer.source.MediaSource;
 import java.util.Map;
+import io.flutter.plugins.videoplayer.Messages.PlattformVideoPlaybackOptions;
 
 final class HttpVideoAsset extends VideoAsset {
   private static final String DEFAULT_USER_AGENT = "ExoPlayer";
@@ -29,8 +30,9 @@ final class HttpVideoAsset extends VideoAsset {
   HttpVideoAsset(
       @Nullable String assetUrl,
       @NonNull StreamingFormat streamingFormat,
-      @NonNull Map<String, String> httpHeaders) {
-    super(assetUrl);
+      @NonNull Map<String, String> httpHeaders,
+      @NonNull PlattformVideoPlaybackOptions playbackOptions) {
+    super(assetUrl, playbackOptions);
     this.streamingFormat = streamingFormat;
     this.httpHeaders = httpHeaders;
   }
@@ -38,7 +40,7 @@ final class HttpVideoAsset extends VideoAsset {
   @NonNull
   @Override
   public MediaItem getMediaItem() {
-    MediaItem.Builder builder = new MediaItem.Builder().setUri(assetUrl);
+    MediaItem.Builder builder = getItemBuilder().setUri(assetUrl);
     String mimeType = null;
     switch (streamingFormat) {
       case SMOOTH:

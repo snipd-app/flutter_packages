@@ -47,6 +47,12 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
 - (NSArray<id> *)toList;
 @end
 
+@interface FVPPlattformVideoPlaybackOptions ()
++ (FVPPlattformVideoPlaybackOptions *)fromList:(NSArray<id> *)list;
++ (nullable FVPPlattformVideoPlaybackOptions *)nullableFromList:(NSArray<id> *)list;
+- (NSArray<id> *)toList;
+@end
+
 @interface FVPCreationOptions ()
 + (FVPCreationOptions *)fromList:(NSArray<id> *)list;
 + (nullable FVPCreationOptions *)nullableFromList:(NSArray<id> *)list;
@@ -74,6 +80,31 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
 }
 @end
 
+@implementation FVPPlattformVideoPlaybackOptions
++ (instancetype)makeWithPlaybackEndTimeMs:(nullable NSNumber *)playbackEndTimeMs
+    maxBufferDurationSeconds:(NSInteger )maxBufferDurationSeconds {
+  FVPPlattformVideoPlaybackOptions* pigeonResult = [[FVPPlattformVideoPlaybackOptions alloc] init];
+  pigeonResult.playbackEndTimeMs = playbackEndTimeMs;
+  pigeonResult.maxBufferDurationSeconds = maxBufferDurationSeconds;
+  return pigeonResult;
+}
++ (FVPPlattformVideoPlaybackOptions *)fromList:(NSArray<id> *)list {
+  FVPPlattformVideoPlaybackOptions *pigeonResult = [[FVPPlattformVideoPlaybackOptions alloc] init];
+  pigeonResult.playbackEndTimeMs = GetNullableObjectAtIndex(list, 0);
+  pigeonResult.maxBufferDurationSeconds = [GetNullableObjectAtIndex(list, 1) integerValue];
+  return pigeonResult;
+}
++ (nullable FVPPlattformVideoPlaybackOptions *)nullableFromList:(NSArray<id> *)list {
+  return (list) ? [FVPPlattformVideoPlaybackOptions fromList:list] : nil;
+}
+- (NSArray<id> *)toList {
+  return @[
+    self.playbackEndTimeMs ?: [NSNull null],
+    @(self.maxBufferDurationSeconds),
+  ];
+}
+@end
+
 @implementation FVPCreationOptions
 + (instancetype)makeWithAsset:(nullable NSString *)asset
     uri:(nullable NSString *)uri
@@ -81,7 +112,7 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
     formatHint:(nullable NSString *)formatHint
     httpHeaders:(NSDictionary<NSString *, NSString *> *)httpHeaders
     viewType:(FVPPlatformVideoViewType)viewType
-    playbackEndTimeMs:(nullable NSNumber *)playbackEndTimeMs {
+    playbackOptions:(FVPPlattformVideoPlaybackOptions *)playbackOptions {
   FVPCreationOptions* pigeonResult = [[FVPCreationOptions alloc] init];
   pigeonResult.asset = asset;
   pigeonResult.uri = uri;
@@ -89,7 +120,7 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
   pigeonResult.formatHint = formatHint;
   pigeonResult.httpHeaders = httpHeaders;
   pigeonResult.viewType = viewType;
-  pigeonResult.playbackEndTimeMs = playbackEndTimeMs;
+  pigeonResult.playbackOptions = playbackOptions;
   return pigeonResult;
 }
 + (FVPCreationOptions *)fromList:(NSArray<id> *)list {
@@ -101,7 +132,7 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
   pigeonResult.httpHeaders = GetNullableObjectAtIndex(list, 4);
   FVPPlatformVideoViewTypeBox *boxedFVPPlatformVideoViewType = GetNullableObjectAtIndex(list, 5);
   pigeonResult.viewType = boxedFVPPlatformVideoViewType.value;
-  pigeonResult.playbackEndTimeMs = GetNullableObjectAtIndex(list, 6);
+  pigeonResult.playbackOptions = GetNullableObjectAtIndex(list, 6);
   return pigeonResult;
 }
 + (nullable FVPCreationOptions *)nullableFromList:(NSArray<id> *)list {
@@ -115,7 +146,7 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
     self.formatHint ?: [NSNull null],
     self.httpHeaders ?: [NSNull null],
     [[FVPPlatformVideoViewTypeBox alloc] initWithValue:self.viewType],
-    self.playbackEndTimeMs ?: [NSNull null],
+    self.playbackOptions ?: [NSNull null],
   ];
 }
 @end
@@ -132,6 +163,8 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
     case 130: 
       return [FVPPlatformVideoViewCreationParams fromList:[self readValue]];
     case 131: 
+      return [FVPPlattformVideoPlaybackOptions fromList:[self readValue]];
+    case 132: 
       return [FVPCreationOptions fromList:[self readValue]];
     default:
       return [super readValueOfType:type];
@@ -150,8 +183,11 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
   } else if ([value isKindOfClass:[FVPPlatformVideoViewCreationParams class]]) {
     [self writeByte:130];
     [self writeValue:[value toList]];
-  } else if ([value isKindOfClass:[FVPCreationOptions class]]) {
+  } else if ([value isKindOfClass:[FVPPlattformVideoPlaybackOptions class]]) {
     [self writeByte:131];
+    [self writeValue:[value toList]];
+  } else if ([value isKindOfClass:[FVPCreationOptions class]]) {
+    [self writeByte:132];
     [self writeValue:[value toList]];
   } else {
     [super writeValue:value];
@@ -294,6 +330,26 @@ void SetUpFVPAVFoundationVideoPlayerApiWithSuffix(id<FlutterBinaryMessenger> bin
         NSInteger arg_playerId = [GetNullableObjectAtIndex(args, 1) integerValue];
         FlutterError *error;
         [api setPlaybackSpeed:arg_speed forPlayer:arg_playerId error:&error];
+        callback(wrapResult(nil, error));
+      }];
+    } else {
+      [channel setMessageHandler:nil];
+    }
+  }
+  {
+    FlutterBasicMessageChannel *channel =
+      [[FlutterBasicMessageChannel alloc]
+        initWithName:[NSString stringWithFormat:@"%@%@", @"dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setMaxBufferDuration", messageChannelSuffix]
+        binaryMessenger:binaryMessenger
+        codec:FVPGetMessagesCodec()];
+    if (api) {
+      NSCAssert([api respondsToSelector:@selector(setMaxBufferDuration:forPlayer:error:)], @"FVPAVFoundationVideoPlayerApi api (%@) doesn't respond to @selector(setMaxBufferDuration:forPlayer:error:)", api);
+      [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
+        NSArray<id> *args = message;
+        NSInteger arg_bufferDurationSeconds = [GetNullableObjectAtIndex(args, 0) integerValue];
+        NSInteger arg_playerId = [GetNullableObjectAtIndex(args, 1) integerValue];
+        FlutterError *error;
+        [api setMaxBufferDuration:arg_bufferDurationSeconds forPlayer:arg_playerId error:&error];
         callback(wrapResult(nil, error));
       }];
     } else {

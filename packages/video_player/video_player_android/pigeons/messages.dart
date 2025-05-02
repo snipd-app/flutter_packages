@@ -29,8 +29,18 @@ class PlatformVideoViewCreationParams {
   final int playerId;
 }
 
+class PlattformVideoPlaybackOptions {
+  const PlattformVideoPlaybackOptions({
+    required this.playbackEndTimeMs,
+    required this.maxBufferDurationSeconds,
+  });
+
+  final int? playbackEndTimeMs;
+  final int maxBufferDurationSeconds;
+}
+
 class CreateMessage {
-  CreateMessage({required this.httpHeaders});
+  CreateMessage({required this.httpHeaders, required this.playbackOptions});
   String? asset;
   String? uri;
   String? packageName;
@@ -38,6 +48,7 @@ class CreateMessage {
   Map<String, String> httpHeaders;
   PlatformVideoViewType? viewType;
   int? playbackEndTimeMs;
+  PlattformVideoPlaybackOptions playbackOptions;
 }
 
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
@@ -48,6 +59,7 @@ abstract class AndroidVideoPlayerApi {
   void setLooping(int playerId, bool looping);
   void setVolume(int playerId, double volume);
   void setPlaybackSpeed(int playerId, double speed);
+  void setMaxBufferDuration(int playerId, int bufferDurationSeconds);
   void play(int playerId);
   int position(int playerId);
   void seekTo(int playerId, int position);

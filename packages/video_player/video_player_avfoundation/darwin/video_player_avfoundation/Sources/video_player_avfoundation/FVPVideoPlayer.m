@@ -5,6 +5,7 @@
 #import "./include/video_player_avfoundation/FVPVideoPlayer.h"
 #import "./include/video_player_avfoundation/FVPVideoPlayer_Internal.h"
 #import "./include/video_player_avfoundation/FVPVideoPlayer_Test.h"
+#import "./include/video_player_avfoundation/messages.g.h"
 
 #import <GLKit/GLKit.h>
 
@@ -21,12 +22,12 @@ static void *rateContext = &rateContext;
 - (instancetype)initWithAsset:(NSString *)asset
                     avFactory:(id<FVPAVFactory>)avFactory
                     registrar:(NSObject<FlutterPluginRegistrar> *)registrar
-                    playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs{
+              playbackOptions:  (FVPPlattformVideoPlaybackOptions *) playbackOptions{
   return [self initWithURL:[NSURL fileURLWithPath:[FVPVideoPlayer absolutePathForAssetName:asset]]
                httpHeaders:@{}
                avFactory:avFactory
                registrar:registrar
-                playbackEndTimeMs: playbackEndTimeMs
+           playbackOptions: playbackOptions
   ];
 }
 
@@ -34,20 +35,20 @@ static void *rateContext = &rateContext;
                   httpHeaders:(nonnull NSDictionary<NSString *, NSString *> *)headers
                   avFactory:(id<FVPAVFactory>)avFactory
                   registrar:(NSObject<FlutterPluginRegistrar> *)registrar
-                  playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs {
+            playbackOptions:  (FVPPlattformVideoPlaybackOptions *) playbackOptions {
   NSDictionary<NSString *, id> *options = nil;
   if ([headers count] != 0) {
     options = @{@"AVURLAssetHTTPHeaderFieldsKey" : headers};
   }
   AVURLAsset *urlAsset = [AVURLAsset URLAssetWithURL:url options:options];
   AVPlayerItem *item = [AVPlayerItem playerItemWithAsset:urlAsset];
-  return [self initWithPlayerItem:item avFactory:avFactory registrar:registrar playbackEndTimeMs:playbackEndTimeMs];
+  return [self initWithPlayerItem:item avFactory:avFactory registrar:registrar playbackOptions:playbackOptions];
 }
 
 - (instancetype)initWithPlayerItem:(AVPlayerItem *)item
                          avFactory:(id<FVPAVFactory>)avFactory
                          registrar:(NSObject<FlutterPluginRegistrar> *)registrar
-                         playbackEndTimeMs:  (NSNumber *) playbackEndTimeMs {
+                   playbackOptions:  (FVPPlattformVideoPlaybackOptions *) playbackOptions{
   self = [super init];
   NSAssert(self, @"super init cannot be nil");
 
@@ -85,25 +86,26 @@ static void *rateContext = &rateContext;
       }
     }
   };
+  
+  item.preferredForwardBufferDuration = playbackOptions.maxBufferDurationSeconds;
+  
+  if (playbackOptions.maxBufferDurationSeconds > 0) {
+    _player.automaticallyWaitsToMinimizeStalling = NO;
+  } else {
+    _player.automaticallyWaitsToMinimizeStalling = YES;
+  }
 
   _player = [avFactory playerWithPlayerItem:item];
   _player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
-  NSLog(@"[PLAYER] Check if playbackEndTimeMs is not null %f",
-         [playbackEndTimeMs doubleValue]);
+  
+  NSNumber *playbackEndTimeMs = playbackOptions.playbackEndTimeMs;
+  
   if (playbackEndTimeMs != nil) {
-    NSLog(@"[PLAYER]  PlaybackEndTimeMs is not null");
     CMTime endTime = CMTimeMakeWithSeconds([playbackEndTimeMs doubleValue] / 1000,
                                             NSEC_PER_MSEC);
-    NSLog(@"[PLAYER]  endTime is %f", CMTimeGetSeconds(endTime));
     [_player.currentItem setForwardPlaybackEndTime:endTime];
   }
   
-  // Prevent automatic buffering until play
-
-  _player.automaticallyWaitsToMinimizeStalling = NO;
-  _player.currentItem.preferredForwardBufferDuration = 2;
-  
-
   // Configure output.
   NSDictionary *pixBuffAttributes = @{
     (id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA),
@@ -473,6 +475,16 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 
 - (void)setPlaybackSpeed:(double)speed {
   _targetPlaybackSpeed = @(speed);
+  [self updatePlayingState];
+}
+
+- (void)setMaxBufferDuration:(NSInteger) bufferDurationSeconds {
+  _player.currentItem.preferredForwardBufferDuration = bufferDurationSeconds;
+  if (bufferDurationSeconds > 0) {
+    _player.automaticallyWaitsToMinimizeStalling = NO;
+  } else {
+    _player.automaticallyWaitsToMinimizeStalling = YES;
+  }
   [self updatePlayingState];
 }
 
