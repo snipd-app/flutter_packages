@@ -55,8 +55,8 @@ public abstract class VideoPlayer {
     this.mediaItem = mediaItem;
     this.options = options;
     this.exoPlayerProvider = exoPlayerProvider;
-    this.exoPlayer = createVideoPlayer();
     this.playbackOptions = playbackOptions;
+    this.exoPlayer = createVideoPlayer();
   }
 
   @NonNull
