@@ -102,7 +102,8 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
 
   /// Set the maximum buffer duration.
   Future<void> setMaxBufferDuration(int playerId, Duration maxBufferDuration) {
-    throw UnimplementedError('getPosition() has not been implemented.');
+    throw UnimplementedError(
+        'setMaxBufferDuration() has not been implemented.');
   }
 
   /// Returns a widget displaying the video with a given playerId.

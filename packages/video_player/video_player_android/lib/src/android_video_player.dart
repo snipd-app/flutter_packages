@@ -137,6 +137,14 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
+  Future<void> setMaxBufferDuration(
+    int playerId,
+    Duration maxBufferDuration,
+  ) async {
+    await _api.setMaxBufferDuration(playerId, maxBufferDuration.inSeconds);
+  }
+
+  @override
   Stream<VideoEvent> videoEventsFor(int playerId) {
     return _eventChannelFor(playerId)
         .receiveBroadcastStream()
