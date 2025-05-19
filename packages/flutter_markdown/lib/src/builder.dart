@@ -137,6 +137,7 @@ class MarkdownBuilder implements md.NodeVisitor {
     required this.checkboxBuilder,
     required this.bulletBuilder,
     required this.blockquoteBuilder,
+    required this.codeBlockBuilder,
     required this.builders,
     required this.paddingBuilders,
     required this.listItemCrossAxisAlignment,
@@ -204,6 +205,9 @@ class MarkdownBuilder implements md.NodeVisitor {
 
   /// Called when building a custom blockquote.
   final MarkdownBlockquoteBuilder? blockquoteBuilder;
+
+  /// Called when building a custom code block.
+  final MarkdownCodeBlockBuilder? codeBlockBuilder;
 
   /// Call when build a custom widget.
   final Map<String, MarkdownElementBuilder> builders;
@@ -551,11 +555,12 @@ class MarkdownBuilder implements md.NodeVisitor {
           );
         }
       } else if (tag == 'pre') {
-        child = Container(
-          clipBehavior: Clip.hardEdge,
-          decoration: styleSheet.codeblockDecoration,
-          child: child,
-        );
+        child = codeBlockBuilder?.call(delegate.context, element, child) ??
+            Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: styleSheet.codeblockDecoration,
+              child: child,
+            );
       } else if (tag == 'hr') {
         child = Container(decoration: styleSheet.horizontalRuleDecoration);
       }

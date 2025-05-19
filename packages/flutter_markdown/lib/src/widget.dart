@@ -106,6 +106,15 @@ typedef MarkdownBlockquoteBuilder = Widget Function(
   Widget child,
 );
 
+/// Signature for custom code block widget.
+///
+/// Used by [MarkdownWidget.codeBlockBuilder]
+typedef MarkdownCodeBlockBuilder = Widget? Function(
+  BuildContext context,
+  md.Element element,
+  Widget child,
+);
+
 /// Creates a format [TextSpan] given a string.
 ///
 /// Used by [MarkdownWidget] to highlight the contents of `pre` elements.
@@ -249,6 +258,7 @@ abstract class MarkdownWidget extends StatefulWidget {
     this.checkboxBuilder,
     this.bulletBuilder,
     this.blockquoteBuilder,
+    this.codeBlockBuilder,
     this.builders = const <String, MarkdownElementBuilder>{},
     this.paddingBuilders = const <String, MarkdownPaddingBuilder>{},
     this.fitContent = false,
@@ -318,6 +328,9 @@ abstract class MarkdownWidget extends StatefulWidget {
 
   /// Called when building a blockquote
   final MarkdownBlockquoteBuilder? blockquoteBuilder;
+
+  /// Called when building a code block
+  final MarkdownCodeBlockBuilder? codeBlockBuilder;
 
   /// Render certain tags, usually used with [extensionSet]
   ///
@@ -428,6 +441,7 @@ class _MarkdownWidgetState extends State<MarkdownWidget>
       checkboxBuilder: widget.checkboxBuilder,
       bulletBuilder: widget.bulletBuilder,
       blockquoteBuilder: widget.blockquoteBuilder,
+      codeBlockBuilder: widget.codeBlockBuilder,
       builders: widget.builders,
       paddingBuilders: widget.paddingBuilders,
       fitContent: widget.fitContent,
@@ -507,6 +521,7 @@ class MarkdownBody extends MarkdownWidget {
     super.checkboxBuilder,
     super.bulletBuilder,
     super.blockquoteBuilder,
+    super.codeBlockBuilder,
     super.builders,
     super.paddingBuilders,
     super.listItemCrossAxisAlignment,
@@ -563,6 +578,8 @@ class Markdown extends MarkdownWidget {
     super.sizedImageBuilder,
     super.checkboxBuilder,
     super.bulletBuilder,
+    super.blockquoteBuilder,
+    super.codeBlockBuilder,
     super.builders,
     super.paddingBuilders,
     super.listItemCrossAxisAlignment,
