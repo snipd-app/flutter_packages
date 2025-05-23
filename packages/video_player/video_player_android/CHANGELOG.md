@@ -1,3 +1,8 @@
+## 2.8.6
+
+* Fixes a [bug](https://github.com/flutter/flutter/issues/165149) where the `isBuffering` flag
+  always returns true after seeking to any position.
+
 ## 2.8.2
 
 * Fixes a [bug](https://github.com/flutter/flutter/issues/164689) that can cause video to
