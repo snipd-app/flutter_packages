@@ -40,7 +40,6 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
 
   @override
   Future<int?> create(DataSource dataSource) async {
-    print('[BUG] Creating dataSource');
     return createWithOptions(
       VideoCreationOptions(
         dataSource: dataSource,
