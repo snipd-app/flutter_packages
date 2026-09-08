@@ -61,13 +61,8 @@ public abstract class VideoPlayer {
 
   @NonNull
   protected ExoPlayer createVideoPlayer() {
-    int bufferDuration  = playbackOptions.getMaxBufferDurationSeconds().intValue() * 1000;
-
     @SuppressLint("UnsafeOptInUsageError")
-    ExoPlayer exoPlayer = exoPlayerProvider.get(new DefaultLoadControl.Builder()
-                    .setPrioritizeTimeOverSizeThresholds(true)
-                    .setBufferDurationsMs(bufferDuration, bufferDuration, 2000, 2000)
-            .build());
+    ExoPlayer exoPlayer = exoPlayerProvider.get(createLoadControl());
     exoPlayer.setMediaItem(mediaItem);
     exoPlayer.prepare();
 
@@ -75,6 +70,20 @@ public abstract class VideoPlayer {
     setAudioAttributes(exoPlayer, options.mixWithOthers);
 
     return exoPlayer;
+  }
+
+  // Zero means the platform default, matching the iOS implementation.
+  @SuppressLint("UnsafeOptInUsageError")
+  @NonNull
+  private LoadControl createLoadControl() {
+    int bufferDuration = playbackOptions.getMaxBufferDurationSeconds().intValue() * 1000;
+    if (bufferDuration <= 0) {
+      return new DefaultLoadControl();
+    }
+    return new DefaultLoadControl.Builder()
+        .setPrioritizeTimeOverSizeThresholds(true)
+        .setBufferDurationsMs(bufferDuration, bufferDuration, 2000, 2000)
+        .build();
   }
 
   @NonNull
@@ -114,6 +123,15 @@ public abstract class VideoPlayer {
     final PlaybackParameters playbackParameters = new PlaybackParameters(((float) value));
 
     exoPlayer.setPlaybackParameters(playbackParameters);
+  }
+
+  void setAudioOnly(boolean audioOnly) {
+    exoPlayer.setTrackSelectionParameters(
+        exoPlayer
+            .getTrackSelectionParameters()
+            .buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, audioOnly)
+            .build());
   }
 
   void setMaxBufferDuration(long bufferDurationSeconds) {

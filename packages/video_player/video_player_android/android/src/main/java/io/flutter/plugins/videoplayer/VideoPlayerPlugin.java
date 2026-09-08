@@ -201,6 +201,12 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
   }
 
   @Override
+  public void setAudioOnly(@NonNull Long playerId, @NonNull Boolean audioOnly) {
+    VideoPlayer player = getPlayer(playerId);
+    player.setAudioOnly(audioOnly);
+  }
+
+  @Override
   public void play(@NonNull Long playerId) {
     VideoPlayer player = getPlayer(playerId);
     player.play();

@@ -515,6 +515,8 @@ public class Messages {
 
     void setMaxBufferDuration(@NonNull Long playerId, @NonNull Long bufferDurationSeconds);
 
+    void setAudioOnly(@NonNull Long playerId, @NonNull Boolean audioOnly);
+
     void play(@NonNull Long playerId);
 
     @NonNull 
@@ -688,6 +690,30 @@ public class Messages {
                 Long bufferDurationSecondsArg = (Long) args.get(1);
                 try {
                   api.setMaxBufferDuration(playerIdArg, bufferDurationSecondsArg);
+                  wrapped.add(0, null);
+                }
+ catch (Throwable exception) {
+                  wrapped = wrapError(exception);
+                }
+                reply.reply(wrapped);
+              });
+        } else {
+          channel.setMessageHandler(null);
+        }
+      }
+      {
+        BasicMessageChannel<Object> channel =
+            new BasicMessageChannel<>(
+                binaryMessenger, "dev.flutter.pigeon.video_player_android.AndroidVideoPlayerApi.setAudioOnly" + messageChannelSuffix, getCodec());
+        if (api != null) {
+          channel.setMessageHandler(
+              (message, reply) -> {
+                ArrayList<Object> wrapped = new ArrayList<>();
+                ArrayList<Object> args = (ArrayList<Object>) message;
+                Long playerIdArg = (Long) args.get(0);
+                Boolean audioOnlyArg = (Boolean) args.get(1);
+                try {
+                  api.setAudioOnly(playerIdArg, audioOnlyArg);
                   wrapped.add(0, null);
                 }
  catch (Throwable exception) {

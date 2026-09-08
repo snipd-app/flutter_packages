@@ -76,6 +76,8 @@ abstract class AVFoundationVideoPlayerApi {
   void setPlaybackSpeed(double speed, int playerId);
   @ObjCSelector('setMaxBufferDuration:forPlayer:')
   void setMaxBufferDuration(int bufferDurationSeconds, int playerId);
+  @ObjCSelector('setAudioOnly:forPlayer:')
+  void setAudioOnly(bool audioOnly, int playerId);
   @ObjCSelector('playPlayer:')
   void play(int playerId);
   @ObjCSelector('positionForPlayer:')

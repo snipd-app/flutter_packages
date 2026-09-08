@@ -731,6 +731,16 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _videoPlayerPlatform.setMaxBufferDuration(textureId, duration);
   }
 
+  /// Best effort to keep only the audio playing: video decoding stops and
+  /// adaptive streams pick an audio-only rendition when one exists. Audio is
+  /// never interrupted, and the last frame stays on screen.
+  Future<void> setAudioOnly(bool audioOnly) async {
+    if (_isDisposedOrNotInitialized) {
+      return;
+    }
+    await _videoPlayerPlatform.setAudioOnly(textureId, audioOnly);
+  }
+
   /// Sets the caption offset.
   ///
   /// The [offset] will be used when getting the correct caption for a specific position.

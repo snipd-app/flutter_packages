@@ -19,7 +19,12 @@ final class FakeVideoAsset extends VideoAsset {
   }
 
   FakeVideoAsset(String assetUrl, @NonNull MediaSource.Factory mediaSourceFactory) {
-    super(assetUrl);
+    super(
+        assetUrl,
+        new Messages.PlattformVideoPlaybackOptions.Builder()
+            .setPlaybackEndTimeMs(null)
+            .setMaxBufferDurationSeconds(0L)
+            .build());
     this.mediaSourceFactory = mediaSourceFactory;
   }
 

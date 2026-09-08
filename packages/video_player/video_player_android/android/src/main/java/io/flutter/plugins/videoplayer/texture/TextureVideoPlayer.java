@@ -6,7 +6,6 @@ package io.flutter.plugins.videoplayer.texture;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
@@ -15,7 +14,6 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import io.flutter.plugins.videoplayer.ExoPlayerEventListener;
-import io.flutter.plugins.videoplayer.ExoPlayerState;
 import io.flutter.plugins.videoplayer.Messages;
 import io.flutter.plugins.videoplayer.VideoAsset;
 import io.flutter.plugins.videoplayer.VideoPlayer;
@@ -34,7 +32,7 @@ import io.flutter.plugins.videoplayer.Messages.PlattformVideoPlaybackOptions;
 public final class TextureVideoPlayer extends VideoPlayer
     implements TextureRegistry.SurfaceProducer.Callback {
   @NonNull private final TextureRegistry.SurfaceProducer surfaceProducer;
-  @Nullable private ExoPlayerState savedStateDuring;
+  private boolean needsSurface = false;
 
   /**
    * Creates a texture video player.
@@ -87,17 +85,14 @@ public final class TextureVideoPlayer extends VideoPlayer
   @NonNull
   @Override
   protected ExoPlayerEventListener createExoPlayerEventListener(@NonNull ExoPlayer exoPlayer) {
-    return new TextureExoPlayerEventListener(
-        exoPlayer, videoPlayerEvents, playerHasBeenSuspended());
+    return new TextureExoPlayerEventListener(exoPlayer, videoPlayerEvents, false);
   }
 
   @RestrictTo(RestrictTo.Scope.LIBRARY)
   public void onSurfaceAvailable() {
-    if (savedStateDuring != null) {
-      exoPlayer = createVideoPlayer();
+    if (needsSurface) {
       exoPlayer.setVideoSurface(surfaceProducer.getSurface());
-      savedStateDuring.restore(exoPlayer);
-      savedStateDuring = null;
+      needsSurface = false;
     }
   }
 
@@ -106,14 +101,10 @@ public final class TextureVideoPlayer extends VideoPlayer
   // https://github.com/flutter/flutter/issues/161256.
   @SuppressWarnings({"deprecation", "removal"})
   public void onSurfaceDestroyed() {
-    // Intentionally do not call pause/stop here, because the surface has already been released
-    // at this point (see https://github.com/flutter/flutter/issues/156451).
-    savedStateDuring = ExoPlayerState.save(exoPlayer);
-    exoPlayer.release();
-  }
-
-  private boolean playerHasBeenSuspended() {
-    return savedStateDuring != null;
+    // The surface goes away whenever the app is backgrounded. Detaching it instead of releasing
+    // the player keeps audio playing; ExoPlayer decodes to a placeholder surface meanwhile.
+    exoPlayer.setVideoSurface(null);
+    needsSurface = true;
   }
 
   public void dispose() {

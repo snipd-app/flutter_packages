@@ -63,6 +63,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// Sets the playback speed of the video player.
 - (void)setMaxBufferDuration:(NSInteger) bufferDurationSeconds;
 
+/// Stops decoding video, and for HLS steers variant selection to an audio-only rendition when
+/// there is one, while audio keeps playing.
+- (void)setAudioOnly:(BOOL)audioOnly;
+
 /// Starts playing the video.
 - (void)play;
 

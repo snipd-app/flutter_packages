@@ -74,6 +74,8 @@ abstract class TestHostVideoPlayerApi {
 
   void setMaxBufferDuration(int playerId, int bufferDurationSeconds);
 
+  void setAudioOnly(int playerId, bool audioOnly);
+
   void play(int playerId);
 
   int position(int playerId);
@@ -258,6 +260,34 @@ abstract class TestHostVideoPlayerApi {
               'Argument for dev.flutter.pigeon.video_player_android.AndroidVideoPlayerApi.setMaxBufferDuration was null, expected non-null int.');
           try {
             api.setMaxBufferDuration(arg_playerId!, arg_bufferDurationSeconds!);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.video_player_android.AndroidVideoPlayerApi.setAudioOnly$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        _testBinaryMessengerBinding!.defaultBinaryMessenger.setMockDecodedMessageHandler<Object?>(pigeonVar_channel, null);
+      } else {
+        _testBinaryMessengerBinding!.defaultBinaryMessenger.setMockDecodedMessageHandler<Object?>(pigeonVar_channel, (Object? message) async {
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.video_player_android.AndroidVideoPlayerApi.setAudioOnly was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final int? arg_playerId = (args[0] as int?);
+          assert(arg_playerId != null,
+              'Argument for dev.flutter.pigeon.video_player_android.AndroidVideoPlayerApi.setAudioOnly was null, expected non-null int.');
+          final bool? arg_audioOnly = (args[1] as bool?);
+          assert(arg_audioOnly != null,
+              'Argument for dev.flutter.pigeon.video_player_android.AndroidVideoPlayerApi.setAudioOnly was null, expected non-null bool.');
+          try {
+            api.setAudioOnly(arg_playerId!, arg_audioOnly!);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

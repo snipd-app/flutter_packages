@@ -17,6 +17,11 @@ static void *presentationSizeContext = &presentationSizeContext;
 static void *durationContext = &durationContext;
 static void *playbackLikelyToKeepUpContext = &playbackLikelyToKeepUpContext;
 static void *rateContext = &rateContext;
+static void *tracksContext = &tracksContext;
+
+@interface FVPVideoPlayer ()
+@property(nonatomic) BOOL audioOnly;
+@end
 
 @implementation FVPVideoPlayer
 - (instancetype)initWithAsset:(NSString *)asset
@@ -160,6 +165,9 @@ static void *rateContext = &rateContext;
          forKeyPath:@"playbackLikelyToKeepUp"
             options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
             context:playbackLikelyToKeepUpContext];
+  // Tracks appear once the item is ready and change with the HLS variant, so the audio-only
+  // choice has to be re-applied to them.
+  [item addObserver:self forKeyPath:@"tracks" options:NSKeyValueObservingOptionNew context:tracksContext];
 
   // Add observer to AVPlayer instead of AVPlayerItem since the AVPlayerItem does not have a "rate"
   // property
@@ -259,6 +267,8 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       }
       _eventSink(@{@"event" : @"bufferingUpdate", @"values" : values});
     }
+  } else if (context == tracksContext) {
+    [self applyAudioOnlyToTracks];
   } else if (context == statusContext) {
     AVPlayerItem *item = (AVPlayerItem *)object;
     switch (item.status) {
@@ -478,6 +488,22 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   [self updatePlayingState];
 }
 
+- (void)setAudioOnly:(BOOL)audioOnly {
+  _audioOnly = audioOnly;
+  // Only meaningful for HLS: a tiny cap makes AVFoundation pick the audio-only rendition when
+  // the playlist has one, and the lowest variant otherwise. Zero lifts the cap.
+  _player.currentItem.preferredPeakBitRate = audioOnly ? 1 : 0;
+  [self applyAudioOnlyToTracks];
+}
+
+- (void)applyAudioOnlyToTracks {
+  for (AVPlayerItemTrack *track in _player.currentItem.tracks) {
+    if ([track.assetTrack.mediaType isEqualToString:AVMediaTypeVideo]) {
+      track.enabled = !_audioOnly;
+    }
+  }
+}
+
 - (void)setMaxBufferDuration:(NSInteger) bufferDurationSeconds {
   _player.currentItem.preferredForwardBufferDuration = bufferDurationSeconds;
   if (bufferDurationSeconds > 0) {
@@ -538,6 +564,7 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   [currentItem removeObserver:self forKeyPath:@"presentationSize"];
   [currentItem removeObserver:self forKeyPath:@"duration"];
   [currentItem removeObserver:self forKeyPath:@"playbackLikelyToKeepUp"];
+  [currentItem removeObserver:self forKeyPath:@"tracks"];
   [_player removeObserver:self forKeyPath:@"rate"];
 }
 

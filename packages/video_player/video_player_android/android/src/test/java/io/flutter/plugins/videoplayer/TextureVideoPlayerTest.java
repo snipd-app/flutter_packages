@@ -63,7 +63,15 @@ public final class TextureVideoPlayerTest {
 
   private TextureVideoPlayer createVideoPlayer(VideoPlayerOptions options) {
     return new TextureVideoPlayer(
-        mockEvents, mockProducer, fakeVideoAsset.getMediaItem(), options, () -> mockExoPlayer);
+        mockEvents,
+        mockProducer,
+        fakeVideoAsset.getMediaItem(),
+        options,
+        (loadControl) -> mockExoPlayer,
+        new Messages.PlattformVideoPlaybackOptions.Builder()
+            .setPlaybackEndTimeMs(null)
+            .setMaxBufferDurationSeconds(0L)
+            .build());
   }
 
   @Test
@@ -82,31 +90,22 @@ public final class TextureVideoPlayerTest {
   }
 
   @Test
-  public void onSurfaceProducerDestroyedAndAvailableReleasesAndThenRecreatesAndResumesPlayer() {
+  public void onSurfaceProducerDestroyedAndAvailableDetachesAndReattachesSurface() {
     VideoPlayer videoPlayer = createVideoPlayer();
 
     verify(mockProducer).setCallback(callbackCaptor.capture());
     verify(mockExoPlayer, never()).release();
 
-    when(mockExoPlayer.getCurrentPosition()).thenReturn(10L);
-    when(mockExoPlayer.getRepeatMode()).thenReturn(Player.REPEAT_MODE_ALL);
-    when(mockExoPlayer.getVolume()).thenReturn(0.5f);
-    when(mockExoPlayer.getPlaybackParameters()).thenReturn(new PlaybackParameters(2.5f));
-
     TextureRegistry.SurfaceProducer.Callback producerLifecycle = callbackCaptor.getValue();
     simulateSurfaceDestruction(producerLifecycle);
 
-    verify(mockExoPlayer).release();
+    verify(mockExoPlayer).setVideoSurface(null);
+    verify(mockExoPlayer, never()).release();
 
-    // Create a new mock exo player so that we get a new instance.
-    mockExoPlayer = mock(ExoPlayer.class);
+    reset(mockExoPlayer);
     producerLifecycle.onSurfaceAvailable();
 
-    verify(mockExoPlayer).setVideoSurface(any());
-    verify(mockExoPlayer).seekTo(10L);
-    verify(mockExoPlayer).setRepeatMode(Player.REPEAT_MODE_ALL);
-    verify(mockExoPlayer).setVolume(0.5f);
-    verify(mockExoPlayer).setPlaybackParameters(new PlaybackParameters(2.5f));
+    verify(mockExoPlayer).setVideoSurface(notNull());
 
     videoPlayer.dispose();
   }
@@ -162,23 +161,21 @@ public final class TextureVideoPlayerTest {
     VideoPlayer videoPlayer = createVideoPlayer();
     when(mockExoPlayer.getVideoSize()).thenReturn(new VideoSize(300, 200));
 
-    // Capture the lifecycle events so we can simulate onSurfaceAvailableDestroyed.
+    // Capture the lifecycle events so we can simulate onSurfaceDestroyed/Available.
     verify(mockProducer).setCallback(callbackCaptor.capture());
     TextureRegistry.SurfaceProducer.Callback producerLifecycle = callbackCaptor.getValue();
+
+    verify(mockExoPlayer).addListener(listenerCaptor.capture());
+    Player.Listener listener = listenerCaptor.getValue();
+    listener.onPlaybackStateChanged(Player.STATE_READY);
+    verify(mockEvents).onInitialized(anyInt(), anyInt(), anyLong(), anyInt());
 
     // Trigger destroyed/available.
     simulateSurfaceDestruction(producerLifecycle);
     producerLifecycle.onSurfaceAvailable();
 
-    // Initial listener, and the new one from the resume.
-    verify(mockExoPlayer, times(2)).addListener(listenerCaptor.capture());
-    Player.Listener listener = listenerCaptor.getValue();
-
-    // Now trigger that same event, which would happen in the case of a background/resume.
-    listener.onPlaybackStateChanged(Player.STATE_READY);
-
-    // Was not called because it was a result of a background/resume.
-    verify(mockEvents, never()).onInitialized(anyInt(), anyInt(), anyLong(), anyInt());
+    // It should still only have been called the one time.
+    verify(mockEvents).onInitialized(anyInt(), anyInt(), anyLong(), anyInt());
 
     videoPlayer.dispose();
   }

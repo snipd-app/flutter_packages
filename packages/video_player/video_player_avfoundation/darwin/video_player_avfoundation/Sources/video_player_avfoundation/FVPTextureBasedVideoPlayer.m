@@ -98,6 +98,20 @@
     // for issue #1, and restore the correct width and height for issue #2.
     _playerLayer = [AVPlayerLayer playerLayerWithPlayer:self.player];
     [self.flutterViewLayer addSublayer:self.playerLayer];
+
+#if !TARGET_OS_OSX
+    // iOS pauses any AVPlayer attached to an AVPlayerLayer once the app is in the background.
+    // The layer above is only needed while frames are rendered, so it is detached while
+    // backgrounded and reattached on return, which keeps the audio playing.
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applicationDidEnterBackground:)
+                                                 name:UIApplicationDidEnterBackgroundNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applicationWillEnterForeground:)
+                                                 name:UIApplicationWillEnterForegroundNotification
+                                               object:nil];
+#endif
   }
   return self;
 }
@@ -131,6 +145,25 @@
   return root.view.layer;
 #endif
 }
+
+#if !TARGET_OS_OSX
+- (void)applicationDidEnterBackground:(NSNotification *)notification {
+  if (self.disposed) {
+    return;
+  }
+  self.playerLayer.player = nil;
+  _displayLink.running = NO;
+}
+
+- (void)applicationWillEnterForeground:(NSNotification *)notification {
+  if (self.disposed) {
+    return;
+  }
+  self.playerLayer.player = self.player;
+  [self updatePlayingState];
+  [self expectFrame];
+}
+#endif
 
 #pragma mark - Overrides
 

@@ -138,6 +138,11 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
+  Future<void> setAudioOnly(int playerId, bool audioOnly) {
+    return _api.setAudioOnly(audioOnly, playerId);
+  }
+
+  @override
   Future<void> seekTo(int playerId, Duration position) {
     return _api.seekTo(position.inMilliseconds, playerId);
   }

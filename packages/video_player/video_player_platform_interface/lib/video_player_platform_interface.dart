@@ -106,6 +106,12 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
         'setMaxBufferDuration() has not been implemented.');
   }
 
+  /// Stops decoding video, and for adaptive streams selecting video renditions,
+  /// while keeping audio playing.
+  Future<void> setAudioOnly(int playerId, bool audioOnly) {
+    throw UnimplementedError('setAudioOnly() has not been implemented.');
+  }
+
   /// Returns a widget displaying the video with a given playerId.
   @Deprecated('Use buildViewWithOptions() instead.')
   Widget buildView(int playerId) {

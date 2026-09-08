@@ -60,6 +60,7 @@ abstract class AndroidVideoPlayerApi {
   void setVolume(int playerId, double volume);
   void setPlaybackSpeed(int playerId, double speed);
   void setMaxBufferDuration(int playerId, int bufferDurationSeconds);
+  void setAudioOnly(int playerId, bool audioOnly);
   void play(int playerId);
   int position(int playerId);
   void seekTo(int playerId, int position);

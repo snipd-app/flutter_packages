@@ -145,6 +145,11 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
+  Future<void> setAudioOnly(int playerId, bool audioOnly) async {
+    await _api.setAudioOnly(playerId, audioOnly);
+  }
+
+  @override
   Stream<VideoEvent> videoEventsFor(int playerId) {
     return _eventChannelFor(playerId)
         .receiveBroadcastStream()

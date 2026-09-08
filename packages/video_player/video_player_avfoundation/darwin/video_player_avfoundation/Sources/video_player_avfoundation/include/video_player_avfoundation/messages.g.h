@@ -77,6 +77,7 @@ NSObject<FlutterMessageCodec> *FVPGetMessagesCodec(void);
 - (void)setVolume:(double)volume forPlayer:(NSInteger)playerId error:(FlutterError *_Nullable *_Nonnull)error;
 - (void)setPlaybackSpeed:(double)speed forPlayer:(NSInteger)playerId error:(FlutterError *_Nullable *_Nonnull)error;
 - (void)setMaxBufferDuration:(NSInteger)bufferDurationSeconds forPlayer:(NSInteger)playerId error:(FlutterError *_Nullable *_Nonnull)error;
+- (void)setAudioOnly:(BOOL)audioOnly forPlayer:(NSInteger)playerId error:(FlutterError *_Nullable *_Nonnull)error;
 - (void)playPlayer:(NSInteger)playerId error:(FlutterError *_Nullable *_Nonnull)error;
 /// @return `nil` only when `error != nil`.
 - (nullable NSNumber *)positionForPlayer:(NSInteger)playerId error:(FlutterError *_Nullable *_Nonnull)error;

@@ -292,6 +292,13 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
   [player setMaxBufferDuration:maxBufferDuration];
 }
 
+- (void)setAudioOnly:(BOOL)audioOnly
+           forPlayer:(NSInteger)playerIdentifier
+               error:(FlutterError **)error {
+  FVPVideoPlayer *player = self.playersByIdentifier[@(playerIdentifier)];
+  [player setAudioOnly:audioOnly];
+}
+
 - (void)playPlayer:(NSInteger)playerIdentifier error:(FlutterError **)error {
   FVPVideoPlayer *player = self.playersByIdentifier[@(playerIdentifier)];
   [player play];
