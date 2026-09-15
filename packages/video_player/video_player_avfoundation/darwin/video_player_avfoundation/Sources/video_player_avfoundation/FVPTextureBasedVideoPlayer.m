@@ -140,9 +140,12 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
   // TODO(hellohuanlin): Provide a non-deprecated codepath. See
   // https://github.com/flutter/flutter/issues/104117
-  UIViewController *root = UIApplication.sharedApplication.keyWindow.rootViewController;
+  // The window, not its root controller's view: presenting a view controller
+  // full screen takes the root view out of the window, which would leave this
+  // layer in a detached hierarchy and iOS would pause the player.
+  UIWindow *window = UIApplication.sharedApplication.keyWindow;
 #pragma clang diagnostic pop
-  return root.view.layer;
+  return window.layer;
 #endif
 }
 
